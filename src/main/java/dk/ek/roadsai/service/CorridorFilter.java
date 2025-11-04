@@ -1,0 +1,55 @@
+package dk.ek.roadsai.service;
+
+import dk.ek.roadsai.model.Station;
+import dk.ek.roadsai.util.GeoDistance;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+
+// Filters and orders stations relative to a route polyline using the new GeoDistance helpers
+// - Distance check uses GeoDistance.pointToPolylineM(...)
+// - Ordering uses GeoDistance.progressAlongPolylineM(...)
+public class CorridorFilter {
+
+    /** Returns stations within a buffer (meters) of the route, ordered from start→end of the route.
+     * @param stations     input station list
+     * @param routeLonLat  route polyline as List of [lon,lat]
+     * @param bufferMeters buffer width in meters (e.g., 8000 for fjord corridors)
+     */
+    public List<Station> filterByBuffer(List<Station> stations,
+                                        List<List<Double>> routeLonLat,
+                                        double bufferMeters) {
+        Objects.requireNonNull(stations, "stations");
+        Objects.requireNonNull(routeLonLat, "routeLonLat");
+        if (routeLonLat.size() < 2 || stations.isEmpty()) {
+            return List.of();
+        }
+
+        return stations.stream()
+                .map(s -> new StationWithMetrics(
+                        s,
+                        GeoDistance.pointToPolylineM(s.latitude(), s.longitude(), routeLonLat),
+                        GeoDistance.progressAlongPolylineM(s.latitude(), s.longitude(), routeLonLat)
+                ))
+                .filter(m -> m.distanceM <= bufferMeters)
+                .sorted(Comparator.comparingDouble((StationWithMetrics m) -> m.progressM)
+                        .thenComparingDouble(m -> m.distanceM))
+                .map(m -> m.station)
+                .collect(Collectors.toList());
+    }
+
+    private static final class StationWithMetrics {
+        final Station station;
+        final double distanceM; // shortest distance to route
+        final double progressM; // position along route
+
+        StationWithMetrics(Station station, double distanceM, double progressM) {
+            this.station = station;
+            this.distanceM = distanceM;
+            this.progressM = progressM;
+        }
+    }
+}
