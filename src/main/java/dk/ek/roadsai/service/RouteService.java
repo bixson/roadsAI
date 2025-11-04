@@ -6,17 +6,16 @@ import java.util.Map;
 @SuppressWarnings("ALL")
 public class RouteService {
 
-    /// ⚠️ Replace these demo coords with your full RVK–ÍSAF polyline (WGS84 lon,lat).
-    // Keep it lean for now; denser points = smoother line & better proximity math.
+    /// ⚠️ ÞARF BARA GPS PUNKTA EKKI STÖÐVAR ⚠️ - ÞARF AÐ LAGA
     private static final double[][] RVK_IFJ_LINE = new double[][]{ // nested for {lon, lat}
             {64,1289, 21,9082}, // Reykjavík, Faxaflói
-            {64,4755, 21,9603}, // Hafnarfjall, Hvalfjörður
-            {64.5609, 21.9105}, // Borgarnes
-            {64,8716, 21,5154}, // Brattabrekka
-            {65,5524, 21,833},  // Þröskuldar
+            {64,4755, 21,9603}, // Hafnarfjall, Hvalfjörður VEGAGERDIN
+            {64.5609, 21.9105}, // Borgarnes EKKI TIL
+            {64,8716, 21,5154}, // Brattabrekka VEGAGERDIN
+            {65,5524, 21,833},  // Þröskuldar VEGAGERDIN
             {65,6873, 21,6813}, //Hólmavík
-            {65,7503, 22,1291}, // Steingrímsfjarðarheiði
-            {66.0449, 22.6817}, // Ögur
+            {65,7503, 22,1291}, // Steingrímsfjarðarheiði VEGAGERDIN
+            {66.0449, 22.6817}, // Ögur VEGAGERDIN
             {66.0596, 23.1699}  // Arnarfjörður, Ísafjörður
     };
 

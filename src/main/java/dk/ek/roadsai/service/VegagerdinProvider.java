@@ -1,33 +1,95 @@
 package dk.ek.roadsai.service;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import dk.ek.roadsai.dto.vegagerdin.VegagerdinArrayDto;
+import dk.ek.roadsai.dto.vegagerdin.VegagerdinItemDto;
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.Instant;
-import java.util.List;
-
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class VegagerdinProvider implements StationProvider {
-    private final WebClient http = WebClient.builder().build();
 
-    @Override
-    public List<Station> listStations() {
-        // TODO: FIX ONLY STATIONS ALONG ROUTE
-        return List.of(
-                new Station("holt_n", "Holtavörðuheiði N", 65.1270, -21.3325, "road"),
-                new Station("bratta",  "Brattabrekka",      64.7220, -21.7670, "road")
-                // ... add the real ones you like (IDs must match the API you call)
-        );
-    }
+    private static final String BASE = "https://gagnaveita.vegagerdin.is";
+    private final WebClient http = WebClient.builder().baseUrl(BASE).build();
+    private final XmlMapper xml = new XmlMapper();
+
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("d.M.yyyy HH:mm:ss");
+
+    private final List<Station> registry = List.of(
+
+            // TODO: CHECK IF 'veg:' SHOULD BE PART OF id OR JUST number?
+            new Station("veg:31674", "HFNFJ (Hafnarfjall)", 64.4755, 21.9603, "VEGAGERDIN"),
+            new Station("veg:31985", "BRATT (Brattabrekka)", 64.8716, 21.5155, "VEGAGERDIN"),
+            new Station("veg:32377", "THROS (Þröskuldar)", 65.5524, 21.833, "VEGAGERDIN"),
+            new Station("veg:32474", "STEHE (Steingrímsfjarðarheiði)", 65.7503, 22.1291, "VEGAGERDIN"),
+            new Station("veg:32654", "OGURI (Ögur)", 66.0449, 22.6817, "VEGAGERDIN")
+    );
+
+    @Override public List<Station> listStations() { return registry; }
 
     @Override
     public List<StationObservation> fetchObservations(String stationId, Instant from, Instant to) {
-        // ⚠️ Replace with real API call for each stationId.
-        // Example pattern (pseudo):
-        // var url = "https://api.vegagerdin.is/stations/" + stationId + "?from=" + from + "&to=" + to;
-        // var dto = http.get().uri(url).retrieve().bodyToMono(VGObsDTO.class).block();
-        // return dto.toStationObs();
-        return List.of(); // placeholder until you wire real calls
+        // 0) Parse wanted station number "veg:<Nr>" -> Nr
+        final String nrStr = stationId.startsWith("veg:") ? stationId.substring(4) : stationId;
+        final Integer nrWanted;
+        try {
+            nrWanted = Integer.valueOf(nrStr);
+        } catch (Exception e) {
+            // If we can't parse the number, there is nothing to match.
+            return List.of();
+        }
+
+        // 1) Fetch XML (bulk)
+        final String xmlStr = http.get()
+                .uri("/api/vedur2014_1")
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        if (xmlStr == null || xmlStr.isBlank()) return List.of();
+
+        // 2) Parse XML
+        final VegagerdinArrayDto root;
+        try {
+            root = xml.readValue(xmlStr, VegagerdinArrayDto.class);
+        } catch (Exception e) {
+            return List.of();
+        }
+        if (root == null || root.vedur == null || root.vedur.isEmpty()) return List.of();
+
+        // 3) Filter for this station + time window
+        final ZoneId zone = ZoneId.of("Atlantic/Reykjavik");
+        return root.vedur.stream()
+                .filter(v -> v != null && v.nr != null && v.nr.equals(nrWanted))
+                .map(v -> toObs(stationId, v, zone))
+                .filter(Objects::nonNull)
+                .filter(o -> !o.timestamp().isBefore(from) && !o.timestamp().isAfter(to))
+                .collect(Collectors.toList());
+    }
+
+    private StationObservation toObs(String stationId, VegagerdinItemDto v, ZoneId zone) {
+        try {
+            var local = LocalDateTime.parse(v.dags, FMT);
+            var ts = local.atZone(zone).toInstant();
+            Double wind = v.vindhradi;
+            Double gust = v.vindhvida;
+            return new StationObservation(
+                    stationId,
+                    ts,
+                    v.hiti,
+                    wind,
+                    gust,
+                    null,  // visibility not provided in this feed
+                    null,  // precip not provided
+                    null   // road condition not provided
+            );
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
