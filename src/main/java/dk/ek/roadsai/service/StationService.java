@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 public class StationService {
     private final StationProvider vegagerdin = new VegagerdinProvider();
-    private final StationProvider vedur = new vedurAwsProvider();
+    private final StationProvider vedur = new VedurAwsProvider();
 
     public List<Station> corridorStations(List<List<Double>> routeLonLat, double bufferM) {
         // merge both registries, then corridor-filter

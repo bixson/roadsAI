@@ -25,9 +25,6 @@ public class PromptBuilder {
             if (s.precipType != null) {
                 sb.append("precip=").append(s.precipType).append("; ");
             }
-            if (s.roadCondition != null) {
-                sb.append("road=").append(s.roadCondition).append("; ");
-            }
             sb.append("\n");
         }
         sb.append("driver notes: none");

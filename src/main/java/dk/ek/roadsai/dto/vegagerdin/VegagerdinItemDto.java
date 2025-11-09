@@ -2,6 +2,8 @@ package dk.ek.roadsai.dto.vegagerdin;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+///  single instance converter XML to DTO
+/// sent to VegagerdinArrayDto
 public class VegagerdinItemDto {
     @JacksonXmlProperty(localName = "Breidd")     public Double breidd;      // Latitude
     @JacksonXmlProperty(localName = "Lengd")      public Double lengd;       // longitude

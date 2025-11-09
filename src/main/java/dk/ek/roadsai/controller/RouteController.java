@@ -14,11 +14,11 @@ public class RouteController {
     private final RouteService routeService;
 
     public RouteController() {
-        this.routeService = new RouteService(); // stateless; fine to new()
+        this.routeService = new RouteService();
     }
 
     @GetMapping(value = "/rvk-isf", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> rvkIsf() {
-        return routeService.getRvkIsfGeoJson();
+        return routeService.getGeoJson();
     }
 }

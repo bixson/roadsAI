@@ -17,7 +17,6 @@ public class DataReducer {
         public Double minTempC;
         public Double minVisM;
         public String precipType; // dominant precip type
-        public String roadCondition; // worst road condition
     }
 
     // bucket by rough thirds of route
@@ -34,7 +33,6 @@ public class DataReducer {
             facts.minTempC = entry.getValue().stream().map(StationObservation::tempC).filter(Objects::nonNull).min(Double::compare).orElse(null);
             facts.minVisM = entry.getValue().stream().map(StationObservation::visibilityM).filter(Objects::nonNull).min(Double::compare).orElse(null);
             facts.precipType = dominant(entry.getValue().stream().map(StationObservation::precipType).toList());
-            facts.roadCondition = dominant(entry.getValue().stream().map(StationObservation::roadCondition).toList());
             out.put(entry.getKey(), facts);
         }
         return out;

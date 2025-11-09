@@ -24,23 +24,28 @@ public class AdviceController {
     private final TimeWindowService timeWindowService = new TimeWindowService();
 
     private final StationProvider provider = new VegagerdinProvider();
-    private final StationService stationService = new StationService(provider);
+    private final StationService stationService = new StationService();
     private final DataReducer dataReducer = new DataReducer();
     private final PromptBuilder prompt = new PromptBuilder();
     private final OpenAiService openai = new OpenAiService();
 
     @PostMapping(value = "/advice", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public AdviceResponse advice(@RequestBody AdviceRequest request) {
-        var routeGeo = routeService.getRvkIsfCoordinates();
+        var routeGeo = routeService.getCoordinates();
         var routeKm = estimateRouteKm(routeGeo);
 
         var t = Instant.parse(request.timeIso());
         var timeWindow = timeWindowService.window(request.mode(), t, routeKm);
 
         // 1) choose stations near route
-        List<Station> corridor = stationService.corridorStations(routeGeo, 5000.0, "weather");
+        List<Station> corridor = stationService.corridorStations(routeGeo, 5000.0);
         // 2) fetch observations per-station
         List<StationObservation> obs = stationService.fetchObsForStations(corridor, timeWindow.get("from"), timeWindow.get("to"));
+        // log: mode, time, how many corridor stations + observations were fetched
+        System.out.println("[Advice] mode=" + request.mode() +
+                " t=" + request.timeIso() +
+                " corridorStations=" + corridor.size() +
+                " obs=" + obs.size());
         // 3) reduce → segment fact
         var segments = dataReducer.reduceToSegments(obs);
         // 4) build prompt (ask LLM)

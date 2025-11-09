@@ -1,45 +1,47 @@
 package dk.ek.roadsai.service;
 
+import dk.ek.roadsai.util.GeoDistance;
+
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings("ALL")
 public class RouteService {
 
-    /// ⚠️ ÞARF BARA GPS PUNKTA EKKI STÖÐVAR ⚠️ - ÞARF AÐ LAGA
-    private static final double[][] RVK_IFJ_LINE = new double[][]{ // nested for {lon, lat}
-            {64,1289, 21,9082}, // Reykjavík, Faxaflói
-            {64,4755, 21,9603}, // Hafnarfjall, Hvalfjörður VEGAGERDIN
-            {64.5609, 21.9105}, // Borgarnes EKKI TIL
-            {64,8716, 21,5154}, // Brattabrekka VEGAGERDIN
-            {65,5524, 21,833},  // Þröskuldar VEGAGERDIN
-            {65,6873, 21,6813}, //Hólmavík
-            {65,7503, 22,1291}, // Steingrímsfjarðarheiði VEGAGERDIN
-            {66.0449, 22.6817}, // Ögur VEGAGERDIN
-            {66.0596, 23.1699}  // Arnarfjörður, Ísafjörður
-    };
+    // TODO: Replace with final polyline when ready.
+    private static final List<List<Double>> RVK_ISF = List.of(
+        List.of(-21.9082, 64.1289), // Reykjavík, Faxaflói
+        List.of(-21.9603, 64.4755), // Hafnarfjall (Vegagerðin)
+        List.of(-21.9105, 64.5609), // Borgarnes (approx)
+        List.of(-21.5154, 64.8716), // Brattabrekka (Vegagerðin)
+        List.of(-21.8330, 65.5524), // Þröskuldar (Vegagerðin)
+        List.of(-21.6813, 65.6873), // Hólmavík (approx)
+        List.of(-22.1291, 65.7503), // Steingrímsfjarðarheiði (Vegagerðin)
+        List.of(-22.6817, 66.0449), // Ögur (Vegagerðin)
+        List.of(-23.1699, 66.0596)  // Arnarfjörður / Ísafjörður (approx)
+    );
 
-    public Map<String, Object> getRvkIsfGeoJson() {
+    public List<List<Double>> getCoordinates() {
+        return RVK_ISF;
+    }
+
+    // GeoJSON Feature for Leaflet.
+    public Map<String, Object> getGeoJson() {
         return Map.of(
-                "type", "Feature",
-                "properties", Map.of("id", "rvk-isf", "name", "Reykjavík ↔ Ísafjörður"),
-                "geometry", Map.of(
-                        "type", "LineString",
-                        "coordinates", toListOfPairs(RVK_IFJ_LINE)
-                )
+            "type", "Feature",
+            "properties", Map.of(
+                "id", "rvk-isf",
+                "name", "Reykjavík ↔ Ísafjörður",
+                "length_m", getLengthMeters()
+            ),
+            "geometry", Map.of(
+                "type", "LineString",
+                "coordinates", RVK_ISF
+            )
         );
     }
 
-    @SuppressWarnings("unchecked")
-    public List<List<Double>> getRvkIsfCoordinates() {
-        return (List<List<Double>>) getRvkIsfGeoJson().get("geometry") instanceof Map geom
-                ? (List<List<Double>>) ((Map<?, ?>) geom).get("coordinates")
-                : List.of();
-    }
-
-    private static List<List<Double>> toListOfPairs(double[][] coords) {
-        return java.util.Arrays.stream(coords)
-                .map(p -> List.of(p[0], p[1])) // [lon, lat]
-                .toList();
+    // Polyline length in meters
+    public double getLengthMeters() {
+        return GeoDistance.polylineLengthM(RVK_ISF);
     }
 }
