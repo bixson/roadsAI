@@ -21,8 +21,8 @@ public class TimeWindowService {
             long ETAseconds = Math.round((routeKm / DEFAULT_SPEED_KMH) * 3600);
             // Work backward to find est departure time
             Instant depart = t.minusSeconds(ETAseconds);
-            // Create ±2 hour buffer around departure for weather variability
-            return Map.of("from", depart.minusSeconds(2 * 3600), "to", depart.plusSeconds(2 * 3600));
+            // Create window covering entire travel period: 2h before departure to 1h after arrival (ensures complete journey coverage)
+            return Map.of("from", depart.minusSeconds(2 * 3600), "to", t.plusSeconds(1 * 3600));
         } else { // departure
             // Create 4-hour forward window from departure time
             return Map.of("from", t, "to", t.plus(4, ChronoUnit.HOURS));
