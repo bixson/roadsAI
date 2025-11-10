@@ -10,6 +10,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * nice debug endpoints for testing and troubleshooting
+ */
 @RestController
 @RequestMapping("/api/debug")
 public class DebugController {
@@ -22,13 +25,17 @@ public class DebugController {
         this.stationService = stationService;
     }
 
+    /// GET /api/debug/corridor?bufferM=8000(8km)
+    /// returns stations within bufferM meters of route
     @GetMapping("/corridor")
     public Map<String, Object> corridor(@RequestParam(defaultValue = "8000") double bufferM) {
-        var coords = routeService.getCoordinates(); // RVK↔ÍSAF
+        var coords = routeService.getCoordinates(); // RVK↔ÍSAF json route
         List<Station> corridor = stationService.corridorStations(coords, bufferM);
         return Map.of("bufferM", bufferM, "count", corridor.size(), "stations", corridor);
     }
 
+    /// GET /api/debug/obs?hours=2
+    /// returns time observations from stations within 8km corridor for past (2) hours
     @GetMapping("/obs")
     public Map<String, Object> obs(@RequestParam(defaultValue = "2") int hours) {
         var coords = routeService.getCoordinates();

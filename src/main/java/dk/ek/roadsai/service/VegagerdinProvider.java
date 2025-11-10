@@ -13,35 +13,41 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/**
+ * Vegagerðin road weather station data provider
+ * 90 sek caching to reduce load on API
+ */
 @Service
 public class VegagerdinProvider implements StationProvider {
 
     private static final String BASE = "https://gagnaveita.vegagerdin.is";
     private final WebClient http = WebClient.builder().baseUrl(BASE).build();
     private final XmlMapper xml = new XmlMapper();
+
     //caching
     private static final Duration TTL = Duration.ofSeconds(90);
-    private Instant lastFetchAt = Instant.EPOCH;
-    private String lastXml = null;
+    private Instant lastFetchAt = Instant.EPOCH; // Tracks when cache was last populated
+    private String lastXml = null; // Cached bulk XML response
 
+    // Fetches XML data with simple TTL-based caching
     private String getXml() {
-        // simple TTL-based cache: if lastXml is present and not older than TTL, return it
+        // if lastXml is present and not older than TTL, return it
         if (lastXml != null && Duration.between(lastFetchAt, Instant.now()).compareTo(TTL) < 0) {
             return lastXml;
         }
         // else fetch fresh XML + update cache
         String xmlStr = http.get().uri("/api/vedur2014_1")
                 .retrieve().bodyToMono(String.class).block();
+        // Update cache with fresh data
         lastXml = xmlStr;
         lastFetchAt = Instant.now();
         return xmlStr;
     }
-
+    // format used in Vegagerdin XML timestamps
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("d.M.yyyy HH:mm:ss");
-
+    //fixed for RVK↔IFJ
     private final List<Station> registry = List.of(
-
-            // TODO: CHECK IF 'veg:' SHOULD BE PART OF id OR JUST number?
             new Station("veg:31674", "HFNFJ (Hafnarfjall)", 64.4755, -21.9603, "VEGAGERDIN"),
             new Station("veg:31985", "BRATT (Brattabrekka)", 64.8716, -21.5155, "VEGAGERDIN"),
             new Station("veg:32377", "THROS (Þröskuldar)", 65.5524, -21.833, "VEGAGERDIN"),
@@ -56,13 +62,13 @@ public class VegagerdinProvider implements StationProvider {
 
     @Override
     public List<StationObservation> fetchObservations(String stationId, Instant from, Instant to) {
-        // Parse station number
+        // Strip "veg:" prefix + parse numeric station ID
         final String nrStr = stationId.startsWith("veg:") ? stationId.substring(4) : stationId;
         final int nrWanted;
         try {
             nrWanted = Integer.parseInt(nrStr);
         } catch (Exception e) {
-            return List.of(); // empty
+            return List.of(); // Invalid station ID format
         }
 
         // 1) Fetch XML (bulk)
@@ -71,27 +77,28 @@ public class VegagerdinProvider implements StationProvider {
             return List.of();
         }
 
-        // 2) Parse XML
+        // 2) Parse XML into DTOs
         final VegagerdinArrayDto root;
         try {
             root = xml.readValue(xmlStr, VegagerdinArrayDto.class);
         } catch (Exception e) {
-            return List.of();
+            return List.of(); // XML parsing failed
         }
         if (root == null || root.vedur == null || root.vedur.isEmpty()) {
-            return List.of();
+            return List.of(); // No data in XML
         }
 
-        // 3) Filter for this station + time window
+        // 3) Filter for requested station + time window
         final ZoneId zone = ZoneId.of("Atlantic/Reykjavik");
         return root.vedur.stream()
-                .filter(v -> v != null && v.nr != null && v.nr.equals(nrWanted))
-                .map(v -> toObs(stationId, v, zone))
-                .filter(Objects::nonNull)
-                .filter(o -> !o.timestamp().isBefore(from) && !o.timestamp().isAfter(to))
+                .filter(v -> v != null && v.nr != null && v.nr.equals(nrWanted)) // Match station number
+                .map(v -> toObs(stationId, v, zone)) // Convert XML DTO to model
+                .filter(Objects::nonNull)// Skip malformed observations
+                .filter(o -> !o.timestamp().isBefore(from) && !o.timestamp().isAfter(to)) // Apply time filter
                 .collect(Collectors.toList());
     }
 
+    // Converts a VegagerdinItemDto to StationObservation
     private StationObservation toObs(String stationId, VegagerdinItemDto v, ZoneId zone) {
         try {
             var local = LocalDateTime.parse(v.dags, FMT);

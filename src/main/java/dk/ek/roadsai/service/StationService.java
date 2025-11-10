@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * combined station service for Vegagerðin and vedur.is(IMO)
+ */
 @Service
 public class StationService {
     private final StationProvider vegagerdin;
@@ -21,12 +24,13 @@ public class StationService {
         this.corridorFilter = corridorFilter;
     }
 
+    // return all stations within bufferM meters of route defined by routeLonLat (ordered)
     public List<Station> corridorStations(List<List<Double>> routeLonLat, double bufferM) {
-        // merge both registries, then corridor-filter
-        var all = Stream.concat(vegagerdin.listStations().stream(), vedur.listStations().stream()).toList();
-        return corridorFilter.filterByBuffer(all, routeLonLat, bufferM);
+        var all = Stream.concat(vegagerdin.listStations().stream(), vedur.listStations().stream()).toList(); // merge veg: + imo: stations
+        return corridorFilter.filterByBuffer(all, routeLonLat, bufferM); //return correct ordered station-list
     }
 
+    // fetch obs from providers, return combined obs-list
     public List<StationObservation> fetchObsForStations(List<Station> stations, Instant from, Instant to) {
         List<StationObservation> out = new ArrayList<>();
         for (var st : stations) {

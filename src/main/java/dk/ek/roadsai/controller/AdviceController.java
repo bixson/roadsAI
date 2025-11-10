@@ -16,6 +16,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * advice(): receives route/time, fetches weather station data, returns AI advice with map coordinates
+ * estimateRouteKm(): Sums the haversine distances between each coordinate pair,on route, returns total length in km
+ */
 @RestController
 @RequestMapping("/api")
 public class AdviceController {
@@ -28,8 +32,8 @@ public class AdviceController {
     private final OpenAiService openAiService;
 
     public AdviceController(RouteService routeService, TimeWindowService timeWindowService,
-                           StationService stationService, DataReducer dataReducer,
-                           PromptBuilder promptBuilder, OpenAiService openAiService) {
+                            StationService stationService, DataReducer dataReducer,
+                            PromptBuilder promptBuilder, OpenAiService openAiService) {
         this.routeService = routeService;
         this.timeWindowService = timeWindowService;
         this.stationService = stationService;
@@ -40,36 +44,35 @@ public class AdviceController {
 
     @PostMapping(value = "/advice", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public AdviceResponse advice(@RequestBody AdviceRequest request) {
-        try {
+        try { // Fetch route, get weather data, generate AI advice, build response
+            // Fetch route
             var routeGeo = routeService.getCoordinates();
             var routeKm = estimateRouteKm(routeGeo);
 
             var t = Instant.parse(request.timeIso());
             var timeWindow = timeWindowService.window(request.mode(), t, routeKm);
 
-            // 1) choose stations near route
-            List<Station> corridor = stationService.corridorStations(routeGeo, 5000.0);
-            // 2) fetch observations per-station
-            List<StationObservation> obs = stationService.fetchObsForStations(corridor, timeWindow.get("from"), timeWindow.get("to"));
-            // log: mode, time, how many corridor stations + observations were fetched
+            List<Station> corridor = stationService.corridorStations(routeGeo, 5000.0); // choose stations near route
+
+            List<StationObservation> obs = stationService.fetchObsForStations(corridor, timeWindow.get("from"), timeWindow.get("to")); // fetch observations per-station
+            // log: mode, time, (amount) corridor stations + observations
             System.out.println("[Advice] mode=" + request.mode() +
                     " t=" + request.timeIso() +
                     " corridorStations=" + corridor.size() +
                     " obs=" + obs.size());
-            // 3) reduce → segment fact
-            var segments = dataReducer.reduceToSegments(obs);
-            // 4) build prompt (ask LLM)
-            var user = promptBuilder.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments);
+
+            var segments = dataReducer.reduceToSegments(obs); // reduce → segment fact
+            var user = promptBuilder.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments); // build prompt (ask LLM)
             var aiResponse = openAiService.ask(promptBuilder.systemPrompt(), user);
-            // 5) build response
+            // build response
             Map<String, Object> summary = Map.of(
                     "stationsUsed", corridor.size(),
-                    "window", Map.of("from", timeWindow.get("from").toString(), "to", timeWindow.get("to").toString()),
+                    "window", Map.of("from", timeWindow.get("from").toString(), "to", timeWindow.get("to").toString()), // time window used
                     "hazards", List.of()
             );
             Map<String, Object> mapData = Map.of(
-                    "route", Map.of("type", "LineString", "coordinates", routeGeo),
-                    "stations", corridor.stream().map(s -> Map.of(
+                    "route", Map.of("type", "LineString", "coordinates", routeGeo), // route coordinates
+                    "stations", corridor.stream().map(s -> Map.of( // stations on route
                             "id", s.id(),
                             "name", s.name(),
                             "lon", s.longitude(),
@@ -80,6 +83,7 @@ public class AdviceController {
             return new AdviceResponse(aiResponse, summary, mapData);
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
+            // nice user-friendly error response (fallback)
             return new AdviceResponse(
                     List.of("Error occurred", "Invalid request", "Check time format", "Try again"),
                     Map.of("stationsUsed", 0, "window", Map.of(), "hazards", List.of()),
@@ -88,11 +92,12 @@ public class AdviceController {
         }
     }
 
-    private double estimateRouteKm(List<List<Double>> line) {
+    // Estimate route length in kilometers using haversine formula
+    private double estimateRouteKm(List<List<Double>> line) { // list of a list of [lon, lat], yes.
         double km = 0;
-        for (int i = 0; i < line.size() -1; i++) {
+        for (int i = 0; i < line.size() - 1; i++) {
             var a = line.get(i);
-            var b = line.get(i+1);
+            var b = line.get(i + 1);
             km += GeoDistance.haversineM(a.get(1), a.get(0), b.get(1), b.get(0)) / 1000.0;
         }
         return km;

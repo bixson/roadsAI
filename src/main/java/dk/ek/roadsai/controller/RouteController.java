@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * hardcoded rvk-isf route endpoint
+ */
 @RestController
 @RequestMapping("/api/route")
 public class RouteController {

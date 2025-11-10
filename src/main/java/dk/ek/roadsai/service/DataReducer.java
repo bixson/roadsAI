@@ -9,23 +9,27 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-///  reduces raw data from stations (API) for advice generation
-/// removes unnecessary data + computes summary stats per segment
-/// - we only send worst/best data to advice engine
+/**
+ * Reduces raw station observations for advice generation.
+ * Removes unnecessary data and computes summary statistics per segment.
+ */
 @Service
 public class DataReducer {
 
+    // Container for segment-level(single-station) weather summary statistics
     public static class SegmentFacts {
         public String name;
         public Double maxGustMs;
         public Double windMs;
         public Double minTempC;
         public Double minVisM;
-        public String precipType; // dominant precip type
+        public String precipType; // dominant precip type ("snow", "rain", "CAVOK")
     }
 
-    // calculates max gust, max wind, min temp, min vis, dominant precip type per segment
+    // calculates worst-case metrics per station
+    // Returns max gust, max wind, min temp, min vis, dominant precip type
     public Map<String, SegmentFacts> reduceToSegments(List<StationObservation> obs) {
+        // Group all observations by station ID
         Map<String, List<StationObservation>> byStation = obs.stream()
                 .collect(Collectors.groupingBy(StationObservation::stationId));
 
@@ -33,6 +37,7 @@ public class DataReducer {
         for (var entry : byStation.entrySet()) {
             var facts = new SegmentFacts();
             facts.name = entry.getKey();
+            // Find worst conditions across all observations for station
             facts.maxGustMs = entry.getValue().stream().map(StationObservation::gustMs).filter(Objects::nonNull).max(Double::compare).orElse(null);
             facts.windMs = entry.getValue().stream().map(StationObservation::windMs).filter(Objects::nonNull).max(Double::compare).orElse(null);
             facts.minTempC = entry.getValue().stream().map(StationObservation::tempC).filter(Objects::nonNull).min(Double::compare).orElse(null);
@@ -43,6 +48,7 @@ public class DataReducer {
         return out;
     }
 
+    ///  TODO: CHECK IF THIS IS NECCESSARY
     private String dominant(List<String> values) {
         return values.stream()
                 .filter(Objects::nonNull)

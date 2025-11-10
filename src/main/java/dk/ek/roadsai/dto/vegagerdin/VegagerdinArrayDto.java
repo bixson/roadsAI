@@ -4,6 +4,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.List;
+
 ///  Vegargerðin returns XML in API
 /// wraps @VegagerdinItemDto into an array
 public class VegagerdinArrayDto {
