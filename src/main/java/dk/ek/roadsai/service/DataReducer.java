@@ -1,6 +1,7 @@
 package dk.ek.roadsai.service;
 
 import dk.ek.roadsai.model.StationObservation;
+import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,6 +9,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+///  reduces raw data from stations (API) for advice generation
+/// removes unnecessary data + computes summary stats per segment
+/// - we only send worst/best data to advice engine
+@Service
 public class DataReducer {
 
     public static class SegmentFacts {
@@ -19,7 +24,7 @@ public class DataReducer {
         public String precipType; // dominant precip type
     }
 
-    // bucket by rough thirds of route
+    // calculates max gust, max wind, min temp, min vis, dominant precip type per segment
     public Map<String, SegmentFacts> reduceToSegments(List<StationObservation> obs) {
         Map<String, List<StationObservation>> byStation = obs.stream()
                 .collect(Collectors.groupingBy(StationObservation::stationId));

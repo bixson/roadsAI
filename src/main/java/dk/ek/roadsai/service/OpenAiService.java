@@ -1,7 +1,10 @@
 package dk.ek.roadsai.service;
 
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Service
 public class OpenAiService {
     public List<String> ask(String systemPrompt, String userPrompt) {
         // TODO: Implement OpenAI API call

@@ -1,10 +1,12 @@
 package dk.ek.roadsai.service;
 
 import dk.ek.roadsai.util.GeoDistance;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class RouteService {
 
     // TODO: Replace with final polyline when ready.

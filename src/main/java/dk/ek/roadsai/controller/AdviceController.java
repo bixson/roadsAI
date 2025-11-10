@@ -20,14 +20,23 @@ import java.util.Map;
 @RequestMapping("/api")
 public class AdviceController {
 
-    private final RouteService routeService = new RouteService();
-    private final TimeWindowService timeWindowService = new TimeWindowService();
+    private final RouteService routeService;
+    private final TimeWindowService timeWindowService;
+    private final StationService stationService;
+    private final DataReducer dataReducer;
+    private final PromptBuilder promptBuilder;
+    private final OpenAiService openAiService;
 
-    private final StationProvider provider = new VegagerdinProvider();
-    private final StationService stationService = new StationService();
-    private final DataReducer dataReducer = new DataReducer();
-    private final PromptBuilder prompt = new PromptBuilder();
-    private final OpenAiService openai = new OpenAiService();
+    public AdviceController(RouteService routeService, TimeWindowService timeWindowService,
+                           StationService stationService, DataReducer dataReducer,
+                           PromptBuilder promptBuilder, OpenAiService openAiService) {
+        this.routeService = routeService;
+        this.timeWindowService = timeWindowService;
+        this.stationService = stationService;
+        this.dataReducer = dataReducer;
+        this.promptBuilder = promptBuilder;
+        this.openAiService = openAiService;
+    }
 
     @PostMapping(value = "/advice", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public AdviceResponse advice(@RequestBody AdviceRequest request) {
@@ -49,8 +58,8 @@ public class AdviceController {
         // 3) reduce → segment fact
         var segments = dataReducer.reduceToSegments(obs);
         // 4) build prompt (ask LLM)
-        var user = prompt.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments);
-        var aiResponse = openai.ask(prompt.systemPrompt(), user);
+        var user = promptBuilder.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments);
+        var aiResponse = openAiService.ask(promptBuilder.systemPrompt(), user);
         // 5) build response
         Map<String, Object> summary = Map.of(
                 "stationsUsed", corridor.size(),

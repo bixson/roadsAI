@@ -2,6 +2,7 @@ package dk.ek.roadsai.service;
 
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.util.GeoDistance;
+import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
@@ -9,9 +10,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 
-// Filters and orders stations relative to a route polyline using the new GeoDistance helpers
+// Filters and orders stations in correct sequence with regard to route polyline(hardcoded JSON), else we would have clusterfuck in the stations-order.
 // - Distance check uses GeoDistance.pointToPolylineM(...)
 // - Ordering uses GeoDistance.progressAlongPolylineM(...)
+@Service
 public class CorridorFilter {
 
     /** Returns stations within a buffer (meters) of the route, ordered from start→end of the route.

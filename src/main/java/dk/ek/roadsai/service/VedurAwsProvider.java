@@ -3,12 +3,14 @@ package dk.ek.roadsai.service;
 import dk.ek.roadsai.dto.vedur.is.VedurAwsDto;
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Instant;
 import java.util.List;
 
+@Service
 public class VedurAwsProvider implements StationProvider{
     private final WebClient http = WebClient.builder()
             .baseUrl("https://api.vedur.is")

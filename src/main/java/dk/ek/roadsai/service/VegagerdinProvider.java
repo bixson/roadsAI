@@ -5,6 +5,7 @@ import dk.ek.roadsai.dto.vegagerdin.VegagerdinArrayDto;
 import dk.ek.roadsai.dto.vegagerdin.VegagerdinItemDto;
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.*;
@@ -12,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Service
 public class VegagerdinProvider implements StationProvider {
 
     private static final String BASE = "https://gagnaveita.vegagerdin.is";
@@ -43,7 +45,7 @@ public class VegagerdinProvider implements StationProvider {
             new Station("veg:31674", "HFNFJ (Hafnarfjall)", 64.4755, -21.9603, "VEGAGERDIN"),
             new Station("veg:31985", "BRATT (Brattabrekka)", 64.8716, -21.5155, "VEGAGERDIN"),
             new Station("veg:32377", "THROS (Þröskuldar)", 65.5524, -21.833, "VEGAGERDIN"),
-            new Station("veg:32474", "STEHE (Steingrímsfjarðarheiði)", -65.7503, 22.1291, "VEGAGERDIN"),
+            new Station("veg:32474", "STEHE (Steingrímsfjarðarheiði)", 65.7503, -22.1291, "VEGAGERDIN"),
             new Station("veg:32654", "OGURI (Ögur)", 66.0449, -22.6817, "VEGAGERDIN")
     );
 

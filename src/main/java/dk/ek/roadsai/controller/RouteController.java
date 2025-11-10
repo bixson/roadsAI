@@ -13,8 +13,8 @@ public class RouteController {
 
     private final RouteService routeService;
 
-    public RouteController() {
-        this.routeService = new RouteService();
+    public RouteController(RouteService routeService) {
+        this.routeService = routeService;
     }
 
     @GetMapping(value = "/rvk-isf", produces = MediaType.APPLICATION_JSON_VALUE)
