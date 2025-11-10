@@ -1,5 +1,6 @@
 package dk.ek.roadsai.service;
 
+import dk.ek.roadsai.dto.CapAlert;
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
 import org.springframework.stereotype.Service;
@@ -26,12 +27,13 @@ public class DataReducer {
         public Double minTempC;
         public Double minVisM;
         public String precipType; // dominant precip type ("snow", "rain", "CAVOK")
+        public List<CapAlert> alerts; // Official CAP alerts for station
     }
 
     // calculates worst-case metrics per station
     // Returns max gust, max wind, min temp, min vis, dominant precip type
     // Includes ALL stations (even if no observations) to ensure complete route coverage
-    public Map<String, SegmentFacts> reduceToSegments(List<StationObservation> obs, List<Station> stations) {
+    public Map<String, SegmentFacts> reduceToSegments(List<StationObservation> obs, List<Station> stations, Map<String, List<CapAlert>> stationAlerts) {
         // Group observations by station ID
         Map<String, List<StationObservation>> byStation = obs.stream()
                 .collect(Collectors.groupingBy(StationObservation::stationId));
@@ -58,7 +60,9 @@ public class DataReducer {
                         .findFirst()
                         .orElse(null);
             }
-            // If no observations, all fields remain null (will show "No data available" in prompt)
+            
+            // Add CAP alerts for this station
+            facts.alerts = stationAlerts.getOrDefault(station.id(), List.of());
             
             out.put(station.id(), facts);
         }

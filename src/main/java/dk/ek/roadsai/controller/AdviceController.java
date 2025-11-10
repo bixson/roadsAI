@@ -2,6 +2,7 @@ package dk.ek.roadsai.controller;
 
 import dk.ek.roadsai.dto.AdviceRequest;
 import dk.ek.roadsai.dto.AdviceResponse;
+import dk.ek.roadsai.dto.CapAlert;
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
 import dk.ek.roadsai.service.*;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,11 +33,12 @@ public class AdviceController {
     private final PromptBuilder promptBuilder;
     private final OpenAiService openAiService;
     private final HazardDetector hazardDetector;
+    private final VedurCapProvider vedurCapProvider;
 
     public AdviceController(RouteService routeService, TimeWindowService timeWindowService,
                             StationService stationService, DataReducer dataReducer,
                             PromptBuilder promptBuilder, OpenAiService openAiService,
-                            HazardDetector hazardDetector) {
+                            HazardDetector hazardDetector, VedurCapProvider vedurCapProvider) {
         this.routeService = routeService;
         this.timeWindowService = timeWindowService;
         this.stationService = stationService;
@@ -43,6 +46,7 @@ public class AdviceController {
         this.promptBuilder = promptBuilder;
         this.openAiService = openAiService;
         this.hazardDetector = hazardDetector;
+        this.vedurCapProvider = vedurCapProvider;
     }
 
     @PostMapping(value = "/advice", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -58,13 +62,21 @@ public class AdviceController {
             List<Station> corridor = stationService.corridorStations(routeGeo, 5000.0); // choose stations near route
 
             List<StationObservation> obs = stationService.fetchObsForStations(corridor, timeWindow.get("from"), timeWindow.get("to")); // fetch observations per-station
+            
+            // Fetch CAP alerts for each station
+            Map<String, List<CapAlert>> stationAlerts = new HashMap<>();
+            for (Station station : corridor) {
+                List<CapAlert> alerts = vedurCapProvider.fetchAlerts(station.latitude(), station.longitude());
+                stationAlerts.put(station.id(), alerts);
+            }
+            
             // log: mode, time, (amount) corridor stations + observations
             System.out.println("[Advice] mode=" + request.mode() +
                     " t=" + request.timeIso() +
                     " corridorStations=" + corridor.size() +
                     " obs=" + obs.size());
 
-            var segments = dataReducer.reduceToSegments(obs, corridor); // reduce → segment fact with station names
+            var segments = dataReducer.reduceToSegments(obs, corridor, stationAlerts); // reduce → segment fact with station names
             var hazards = hazardDetector.detectHazards(segments); // detect hazards from API data
             var user = promptBuilder.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments); // build prompt (ask LLM)
             var aiResponse = openAiService.ask(promptBuilder.systemPrompt(), user);

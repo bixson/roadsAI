@@ -21,6 +21,6 @@ public class OpenAiRequest {
     public Double temperature = 0.7;
 
     @JsonProperty("max_tokens")
-    public Integer maxTokens = 600;
+    public Integer maxTokens = 800;
 }
 
