@@ -2,6 +2,8 @@ package dk.ek.roadsai.service;
 
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -14,7 +16,6 @@ public class PromptBuilder {
 
     public String buildUserPrompt(String routeId, String mode, String isoTime, Map<String, DataReducer.SegmentFacts> segs) {
         StringBuilder sb = new StringBuilder();
-        // Add route context header
         sb.append("Route: ").append(routeId).append(" | Mode: ").append(mode).append(" | Time: ").append(isoTime).append("\n\n");
         
         if (segs.isEmpty()) {
@@ -22,71 +23,67 @@ public class PromptBuilder {
             return sb.toString();
         }
         
-        sb.append("Weather observations along route segments:\n");
+        sb.append("Weather observations at stations along the route (ordered from start to end):\n\n");
 
-        // Format each station's weather data
+        // Format data per station
         for (var e : segs.entrySet()) {
             var s = e.getValue();
-            sb.append("- Station ").append(s.name).append(": ");
-            boolean hasData = false; // to track if any data has been added
-
-            // add available weather metrics
-            if (s.maxGustMs != null) {
-                sb.append("gust=").append(String.format("%.1f", s.maxGustMs)).append("m/s"); // 1 decimal place
-                hasData = true;
-            }
+            sb.append(s.stationName).append(":\n");
+            
+            List<String> dataParts = new ArrayList<>();
             if (s.windMs != null) {
-                if (hasData) {
-                    sb.append(", ");
-                }
-                sb.append("wind=").append(String.format("%.1f", s.windMs)).append("m/s"); // 1 decimal place
-                hasData = true;
+                dataParts.add("Wind: " + String.format("%.1f", s.windMs) + " m/s");
+            }
+            if (s.maxGustMs != null) {
+                dataParts.add("Gusts: " + String.format("%.1f", s.maxGustMs) + " m/s");
             }
             if (s.minTempC != null) {
-                if (hasData) {
-                    sb.append(", ");
-                }
-                sb.append("temp=").append(String.format("%.1f", s.minTempC)).append("°C"); // 1 decimal place, C° symbol
-                hasData = true;
+                dataParts.add("Temperature: " + String.format("%.1f", s.minTempC) + "°C");
             }
             if (s.minVisM != null) {
-                if (hasData) {
-                    sb.append(", ");
-                }
-                sb.append("visibility=").append(String.format("%.0f", s.minVisM)).append("m"); // meters, no decimals
-                hasData = true;
+                dataParts.add("Visibility: " + String.format("%.0f", s.minVisM) + " m");
             }
-            if (s.precipType != null) {
-                if (hasData) {
-                    sb.append(", ");
-                }
-                sb.append("precipitation=").append(s.precipType); // "rain", "snow"
+            if (s.precipType != null && !s.precipType.isBlank()) {
+                dataParts.add("Precipitation: " + s.precipType);
             }
-            if (!hasData && s.precipType == null) {
-                sb.append("no data available");
+            
+            if (dataParts.isEmpty()) {
+                sb.append("  No data available");
+            } else {
+                sb.append("  ").append(String.join(", ", dataParts));
             }
-            sb.append("\n");
+            sb.append("\n\n");
         }
         return sb.toString();
     }
 
     public String systemPrompt() {
         return """
-                You are an Iceland road safety expert. Analyze the provided weather observations and infer realistic road conditions along the route. Use ONLY the data provided - do not make assumptions beyond what the weather data suggests.
+                You are an Iceland road safety expert. Analyze the provided weather observations and provide accurate, actionable driving advice.
                 
-                Based on the weather data, infer likely road conditions:
-                - Temperature near/below freezing + precipitation → ice risk
-                - High wind/gusts → reduced vehicle stability, drifting snow
-                - Low visibility → reduced reaction time, difficulty seeing road markings
+                CRITICAL RULES:
+                1. ALWAYS use station NAMES (e.g., "Hólmavík", "Reykjavík") - NEVER use station IDs (e.g., "imo:2481", "veg:31674")
+                2. You MUST mention ALL stations listed in the data - cover conditions at each station along the route
+                3. If a station shows "No data available", mention that data is unavailable for that station
+                4. Reference specific stations by their names when mentioning conditions
+                5. Be direct and factual - base advice on the actual data provided
+                6. Use station names naturally in sentences (e.g., "Strong winds near Hólmavík" not "Station Hólmavík")
+                
+                Road condition inference:
+                - Temperature ≤0°C + precipitation → ice risk
+                - Wind ≥20 m/s → reduced stability, drifting snow risk
+                - Gusts ≥26 m/s → sudden wind bursts, vehicle control issues
+                - Visibility <1000m → reduced reaction time, difficulty seeing
                 - Snow/rain → wet/slippery surfaces
                 
-                Output exactly 4 separate advice points (as 4 distinct strings, no bullet formatting). Each point should be:
-                1. Specific to the conditions observed
-                2. Actionable driving advice
-                3. Focus on hazards and safety measures
-                4. Maximum 90 words total across all 4 points
+                Output exactly 4 separate advice points (as 4 distinct strings, no bullets or numbering):
+                1. Reference specific stations by NAME (not ID) - mention multiple stations
+                2. Cover conditions at ALL stations along the route - don't skip any
+                3. Be direct and factual - straight-to-the-point
+                4. Maximum 120 words total across all 4 points
+                5. Make it useful and actionable
                 
-                Format: Return only the 4 advice points, one per line, no numbering or bullets.
+                Format: Return only the 4 advice points, one per line, no formatting.
                 """;
     }
 }

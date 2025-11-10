@@ -1,5 +1,6 @@
 package dk.ek.roadsai.service;
 
+import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,8 @@ public class DataReducer {
 
     // Container for segment-level(single-station) weather summary statistics
     public static class SegmentFacts {
-        public String name;
+        public String stationName; // Human-readable station name
+        public String stationId; // Station ID for reference
         public Double maxGustMs;
         public Double windMs;
         public Double minTempC;
@@ -28,26 +30,37 @@ public class DataReducer {
 
     // calculates worst-case metrics per station
     // Returns max gust, max wind, min temp, min vis, dominant precip type
-    public Map<String, SegmentFacts> reduceToSegments(List<StationObservation> obs) {
-        // Group all observations by station ID
+    // Includes ALL stations (even if no observations) to ensure complete route coverage
+    public Map<String, SegmentFacts> reduceToSegments(List<StationObservation> obs, List<Station> stations) {
+        // Group observations by station ID
         Map<String, List<StationObservation>> byStation = obs.stream()
                 .collect(Collectors.groupingBy(StationObservation::stationId));
 
         Map<String, SegmentFacts> out = new LinkedHashMap<>();
-        for (var entry : byStation.entrySet()) {
+        
+        // Process ALL stations (in order), not just those with observations
+        for (Station station : stations) {
             var facts = new SegmentFacts();
-            facts.name = entry.getKey();
-            // Find worst conditions across all observations for station
-            facts.maxGustMs = entry.getValue().stream().map(StationObservation::gustMs).filter(Objects::nonNull).max(Double::compare).orElse(null);
-            facts.windMs = entry.getValue().stream().map(StationObservation::windMs).filter(Objects::nonNull).max(Double::compare).orElse(null);
-            facts.minTempC = entry.getValue().stream().map(StationObservation::tempC).filter(Objects::nonNull).min(Double::compare).orElse(null);
-            facts.minVisM = entry.getValue().stream().map(StationObservation::visibilityM).filter(Objects::nonNull).min(Double::compare).orElse(null);
-            facts.precipType = entry.getValue().stream()
-                    .map(StationObservation::precipType)
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(null);
-            out.put(entry.getKey(), facts);
+            facts.stationId = station.id();
+            facts.stationName = station.name();
+            
+            List<StationObservation> stationObs = byStation.getOrDefault(station.id(), List.of());
+            
+            if (!stationObs.isEmpty()) {
+                // Calculate worst conditions from observations
+                facts.maxGustMs = stationObs.stream().map(StationObservation::gustMs).filter(Objects::nonNull).max(Double::compare).orElse(null);
+                facts.windMs = stationObs.stream().map(StationObservation::windMs).filter(Objects::nonNull).max(Double::compare).orElse(null);
+                facts.minTempC = stationObs.stream().map(StationObservation::tempC).filter(Objects::nonNull).min(Double::compare).orElse(null);
+                facts.minVisM = stationObs.stream().map(StationObservation::visibilityM).filter(Objects::nonNull).min(Double::compare).orElse(null);
+                facts.precipType = stationObs.stream()
+                        .map(StationObservation::precipType)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null);
+            }
+            // If no observations, all fields remain null (will show "No data available" in prompt)
+            
+            out.put(station.id(), facts);
         }
         return out;
     }

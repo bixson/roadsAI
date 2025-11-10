@@ -40,7 +40,7 @@ public class HazardDetector {
         boolean foundHazard = false;
         for (var entry : segments.entrySet()) {
             var facts = entry.getValue();
-            String stationName = facts.name;
+            String stationName = facts.stationName;
 
             // Check wind speed hazards
             if (facts.windMs != null) {

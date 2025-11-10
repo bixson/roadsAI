@@ -64,7 +64,7 @@ public class AdviceController {
                     " corridorStations=" + corridor.size() +
                     " obs=" + obs.size());
 
-            var segments = dataReducer.reduceToSegments(obs); // reduce → segment fact
+            var segments = dataReducer.reduceToSegments(obs, corridor); // reduce → segment fact with station names
             var hazards = hazardDetector.detectHazards(segments); // detect hazards from API data
             var user = promptBuilder.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments); // build prompt (ask LLM)
             var aiResponse = openAiService.ask(promptBuilder.systemPrompt(), user);
