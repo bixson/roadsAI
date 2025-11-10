@@ -65,7 +65,12 @@ public class OpenAiService {
                 return List.of("No response from AI", "Try again later", "Service unavailable", "AI service error", "Please retry", "Connection issue", "Response empty", "API error", "Retry request");
             }
 
-            String content = response.choices.get(0).message.content; // Extract content from first choice
+            OpenAiResponse.Choice firstChoice = response.choices.get(0);
+            if (firstChoice == null || firstChoice.message == null || firstChoice.message.content == null) {
+                return List.of("Invalid response format", "Missing message content", "Try again", "Response format error", "Please retry", "Invalid API response", "No content available", "Response error", "Retry request");
+            }
+
+            String content = firstChoice.message.content; // Extract content from first choice
             return parseAdvicePoints(content); // return after parsing method
 
         } catch (Exception e) {
