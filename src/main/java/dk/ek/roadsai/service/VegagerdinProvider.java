@@ -1,7 +1,8 @@
 package dk.ek.roadsai.service;
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import dk.ek.roadsai.dto.vegagerdin.VegagerdinArrayDto;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.ek.roadsai.dto.vegagerdin.VegagerdinItemDto;
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
@@ -16,17 +17,18 @@ import java.util.stream.Collectors;
 
 /**
  * Vegagerðin road weather station data provider
- * 90 sek caching to reduce load on API
+ * 15 min caching to reduce load on API
  */
 @Service
 public class VegagerdinProvider implements StationProvider {
 
     private static final String BASE = "https://gagnaveita.vegagerdin.is";
     private final WebClient http = WebClient.builder().baseUrl(BASE).build();
-    private final XmlMapper xml = new XmlMapper();
+    private final ObjectMapper json = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     //caching
-    private static final Duration TTL = Duration.ofSeconds(90);
+    private static final Duration TTL = Duration.ofMinutes(15); // 15 min
     private Instant lastFetchAt = Instant.EPOCH; // Tracks when cache was last populated
     private String lastXml = null; // Cached bulk XML response
 
@@ -77,26 +79,27 @@ public class VegagerdinProvider implements StationProvider {
             return List.of();
         }
 
-        // 2) Parse XML into DTOs
-        final VegagerdinArrayDto root;
+        // 2) Parse JSON array directly into DTOs
+        List<VegagerdinItemDto> vedur;
         try {
-            root = xml.readValue(xmlStr, VegagerdinArrayDto.class);
+            vedur = json.readValue(xmlStr, new TypeReference<List<VegagerdinItemDto>>() {});
         } catch (Exception e) {
-            return List.of(); // XML parsing failed
+            return List.of(); // JSON parsing failed
         }
-        if (root == null || root.vedur == null || root.vedur.isEmpty()) {
-            return List.of(); // No data in XML
-        }
+//        if (vedur == null || vedur.isEmpty()) {
+//            return List.of(); // No data in JSON
+//        }
 
         // 3) Filter for requested station
-        // Accept only observations from last 1 hour (winter weather changes quickly)
+        // Accept observations from last 2 hours
         final ZoneId zone = ZoneId.of("Atlantic/Reykjavik");
-        Instant oneHourAgo = Instant.now().minusSeconds(3600);
-        return root.vedur.stream()
-                .filter(v -> v != null && v.nr != null && v.nr.equals(nrWanted)) // Match station number
-                .map(v -> toObs(stationId, v, zone)) // Convert XML DTO to model
+        Instant twoHoursAgo = Instant.now().minusSeconds(7200);
+        
+        return vedur.stream()
+                .filter(v -> v != null && v.nrVedurstofa != null && v.nrVedurstofa.equals(nrWanted))
+                .map(v -> toObs(stationId, v, zone)) // Convert DTO to model
                 .filter(Objects::nonNull)// Skip malformed observations
-                .filter(o -> o.timestamp().isAfter(oneHourAgo)) // Accept only recent data (last 1 hour)
+                .filter(o -> o.timestamp().isAfter(twoHoursAgo)) // Accept data from last 2 hours
                 .collect(Collectors.toList());
     }
 

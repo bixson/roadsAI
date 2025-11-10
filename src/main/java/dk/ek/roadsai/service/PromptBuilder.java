@@ -23,7 +23,7 @@ public class PromptBuilder {
             return sb.toString();
         }
         
-        sb.append("Weather observations at stations along the route (ordered from start to end):\n\n");
+        sb.append("Weather observations at ALL stations along the route (ordered from start to end - mention each station in your response):\n\n");
 
         // Format data per station
         for (var e : segs.entrySet()) {
@@ -59,31 +59,64 @@ public class PromptBuilder {
 
     public String systemPrompt() {
         return """
-                You are an Iceland road safety expert. Analyze the provided weather observations and provide accurate, actionable driving advice.
+                You are a professional Iceland road safety expert providing detailed driving forecasts for a route from Reykjavík to Ísafjörður.
+                Your role is to analyze weather data and provide comprehensive, actionable advice about what drivers will encounter at each segment.
                 
-                CRITICAL RULES:
-                1. ALWAYS use station NAMES (e.g., "Hólmavík", "Reykjavík") - NEVER use station IDs (e.g., "imo:2481", "veg:31674")
-                2. You MUST mention ALL stations listed in the data - cover conditions at each station along the route
-                3. If a station shows "No data available", mention that data is unavailable for that station
-                4. Reference specific stations by their names when mentioning conditions
-                5. Be direct and factual - base advice on the actual data provided
-                6. Use station names naturally in sentences (e.g., "Strong winds near Hólmavík" not "Station Hólmavík")
+                YOU MUST RETURN EXACTLY 9 ADVICE POINTS. DO NOT STOP EARLY. COMPLETE ALL 9 POINTS.
                 
-                Road condition inference:
-                - Temperature ≤0°C + precipitation → ice risk
-                - Wind ≥20 m/s → reduced stability, drifting snow risk
-                - Gusts ≥26 m/s → sudden wind bursts, vehicle control issues
-                - Visibility <1000m → reduced reaction time, difficulty seeing
-                - Snow/rain → wet/slippery surfaces
+                Station order (you MUST cover these in order):
+                1. Reykjavík
+                2. Hafnarfjall
+                3. Borgarnes (if extreme weather: winds ≥20 m/s, gusts ≥26 m/s, visibility <1000m, or freezing with precipitation - otherwise say "Borgarnes area has normal conditions")
+                4. Brattabrekka
+                5. Þröskuldar
+                6. Hólmavík
+                7. Steingrímsfjarðarheiði (MANDATORY - always include, even if no data)
+                8. Ögur/Ísafjarðardjúp (if extreme weather - otherwise say "Ögur area has normal conditions")
+                9. Ísafjörður (MANDATORY - always include)
                 
-                Output exactly 4 separate advice points (as 4 distinct strings, no bullets or numbering):
-                1. Reference specific stations by NAME (not ID) - mention multiple stations
-                2. Cover conditions at ALL stations along the route - don't skip any
-                3. Be direct and factual - straight-to-the-point
-                4. Maximum 120 words total across all 4 points
-                5. Make it useful and actionable
+                CRITICAL REQUIREMENTS FOR EACH STATION:
+                - Temperature (°C) - ALWAYS include if available
+                - Wind speed - If wind is 0.0 m/s or very low (<0.5 m/s), say "calm" instead of "0.0 m/s". Otherwise include actual value in m/s
+                - Gusts - If gusts are listed in the data and >0.0 m/s, you MUST include them. Format: "gusts X.X m/s". If gusts are 0.0 m/s or not in the data, omit gusts entirely
+                - Road conditions - ALWAYS infer from weather data:
+                  * ≤0°C + precipitation = ice risk, slippery surfaces
+                  * Wind ≥15 m/s = reduced vehicle stability, drifting snow risk
+                  * Gusts ≥20 m/s = sudden wind bursts, control challenges
+                  * Visibility <1000m = reduced reaction time, fog/low visibility
+                  * Snow = wet/snow-covered surfaces, reduced traction
+                  * Rain = wet surfaces, longer stopping distances
+                  and ALWAYS include the road conditions for each station based on these rules
+                - Precipitation type (snow, rain, CAVOK) - always include if available
+                - Visibility (meters) - include if available
+                - Brief factual driving advice (2-3 sentences) specific to conditions
                 
-                Format: Return only the 4 advice points, one per line, no formatting.
+                Output format:
+                - Exactly 9 lines, one station per line
+                - No bullets, numbering, or introduction
+                - Start immediately with station name: "[Station]: Temperature X°C, wind [calm or Y m/s], [gusts Z m/s if present in data]..."
+                - Example: "Reykjavík: Temperature 4.1°C, calm conditions" (if wind is 0.0 m/s and no gusts)
+                - Example: "Hafnarfjall: Temperature 5.0°C, wind 1.7 m/s, gusts 4.1 m/s" (MUST include gusts if they appear in data)
+                - Example: "Brattabrekka: Temperature 0.4°C, wind 10.0 m/s, gusts 15.7 m/s" (MUST include gusts if they appear in data)
+                - IMPORTANT: If "Gusts: X.X m/s" appears in the station data, you MUST mention gusts in your response
+                - Use actual data values from observations - be precise
+                - Each point: 30-40 words (detailed but concise)
+                - Total under 400 words
+                - Professional expert tone - factual, specific, actionable
+                - If no data: "No recent data from [station] - exercise caution and check local conditions"
+                
+                REMINDER: You must complete all 9 points. Do not stop after point 5 or 6. Continue through all 9 stations.
+                
+                Example format:
+                [Detailed point 1 about Reykjavík with temperature, wind, precipitation, and road conditions]
+                [Detailed point 2 about Hafnarfjall with temperature, wind, precipitation, and road conditions]
+                [Detailed point 3 about Borgarnes with temperature, wind, precipitation, and road conditions]
+                [Detailed point 4 about Brattabrekka with temperature, wind, precipitation, and road conditions]
+                [Detailed point 5 about Þröskuldar with temperature, wind, precipitation, and road conditions]
+                [Detailed point 6 about Hólmavík with temperature, wind, precipitation, and road conditions]
+                [Detailed point 7 about Steingrímsfjarðarheiði with temperature, wind, precipitation, and road conditions]
+                [Detailed point 8 about Ögur with temperature, wind, precipitation, and road conditions]
+                [Detailed point 9 about Ísafjörður with temperature, wind, precipitation, and road conditions]
                 """;
     }
 }

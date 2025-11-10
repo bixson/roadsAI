@@ -15,7 +15,7 @@ import java.util.Map;
 
 /**
  * Vedur.is (IMO) AWS station provider
- * 90 sek caching to reduce load on API
+ * 15 min caching to reduce load on API
  */
 @Service
 public class VedurAwsProvider implements StationProvider {
@@ -25,7 +25,7 @@ public class VedurAwsProvider implements StationProvider {
             .build();
 
     //caching
-    private static final Duration TTL = Duration.ofSeconds(90);
+    private static final Duration TTL = Duration.ofMinutes(15); // 15 min
     private Map<String, List<VedurAwsDto.Aws10minBasic>> cacheData = new HashMap<>();
     private Map<String, Instant> cacheTime = new HashMap<>();
 
@@ -48,14 +48,14 @@ public class VedurAwsProvider implements StationProvider {
                 ? stationId.substring("imo:".length())
                 : stationId;
 
-        // return cached data if less than 90 seconds old
+        // return cached data if less than 15 minutes old
         List<VedurAwsDto.Aws10minBasic> cached = cacheData.get(id);
         Instant cachedTime = cacheTime.get(id);
         if (cached != null && cachedTime != null && Duration.between(cachedTime, Instant.now()).compareTo(TTL) < 0) {
-            // Accept only observations from last 1 hour (winter weather can changes quickly)
-            Instant oneHourAgo = Instant.now().minusSeconds(3600);
+            // Accept observations from last 2 hours (winter weather reporting can be delayed)
+            Instant twoHoursAgo = Instant.now().minusSeconds(7200);
             return VedurAwsDto.map(stationId, cached).stream()
-                    .filter(o -> o.timestamp().isAfter(oneHourAgo))
+                    .filter(o -> o.timestamp().isAfter(twoHoursAgo))
                     .toList();
         }
 
@@ -81,13 +81,12 @@ public class VedurAwsProvider implements StationProvider {
             cacheData.put(id, response);
             cacheTime.put(id, Instant.now());
 
-            // Accept only observations from last 1 hour
-            Instant oneHourAgo = Instant.now().minusSeconds(3600);
+            // Accept observations from last 2 hours (winter weather reporting can be delayed)
+            Instant twoHoursAgo = Instant.now().minusSeconds(7200);
             return VedurAwsDto.map(stationId, response).stream()
-                    .filter(o -> o.timestamp().isAfter(oneHourAgo))
+                    .filter(o -> o.timestamp().isAfter(twoHoursAgo))
                     .toList();
         } catch (Exception e) {
-            System.out.println("[VedurAwsProvider] Error fetching station " + stationId + ": " + e.getMessage());
             return List.of();
         }
     }

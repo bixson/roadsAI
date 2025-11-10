@@ -40,7 +40,7 @@ public class OpenAiService {
                 .build();
     }
 
-    // Sends system and user prompts to OpenAI, returns exactly 4 advice points
+    // Sends system and user prompts to OpenAI, returns exactly 9 advice points(stations on-route)
     // Returns fallback messages on API errors or timeouts
     public List<String> ask(String systemPrompt, String userPrompt) {
         try { // Build request with system context and user query
@@ -62,7 +62,7 @@ public class OpenAiService {
                     .block(); // close stream
 
             if (response == null || response.choices == null || response.choices.isEmpty()) {
-                return List.of("No response from AI", "Check API configuration", "Try again later", "Error occurred");
+                return List.of("No response from AI", "Try again later", "Service unavailable");
             }
 
             String content = response.choices.get(0).message.content; // Extract content from first choice
@@ -70,16 +70,15 @@ public class OpenAiService {
 
         } catch (Exception e) {
             System.out.println("OpenAI error: " + e.getMessage());
-            return List.of("AI service unavailable", "Network error", "API timeout", "Service error");
+            return List.of("AI service unavailable", "Network error", "API timeout", "Try again");
         }
     }
 
-    // Parses OpenAI response text into exactly 4 clean advice points
     // Strips numbering, bullets, and formatting characters
-    // Pads with generic advice if fewer than 4 points returned
+    // Pads with specific advice if fewer than 9 points returned
     private List<String> parseAdvicePoints(String content) {
         if (content == null || content.isBlank()) {
-            return List.of("Empty response", "No advice available", "Try again", "Error parsing");
+            return List.of("Empty response", "No advice available", "Try again");
         }
 
         // Split into lines and filter out blank entries
@@ -89,28 +88,41 @@ public class OpenAiService {
                 .toList();
 
         List<String> cleaned = new ArrayList<>();
+        // Phrases to filter out (generic, unhelpful)
+        List<String> genericPhrases = List.of("drive carefully", "be careful", "stay safe", "take care");
+        
         for (String line : lines) {
             // Remove common GPT list formatting: "1. ", "- ", "• ", etc.
             line = line.replaceFirst("^\\d+[.)]\\s*", "");
             line = line.replaceFirst("^[-*•]\\s*", "");
             line = line.replaceFirst("^[-\\s]+", "");
 
+            // Skip generic phrases
+            String lowerLine = line.toLowerCase();
+            boolean isGeneric = genericPhrases.stream().anyMatch(lowerLine::contains);
+            if (isGeneric && line.length() < 30) {
+                continue; // Skip short generic phrases
+            }
+
             // Keep only meaningful content (length > 10)
             if (!line.isBlank() && line.length() > 10) {
                 cleaned.add(line);
             }
         }
+        
         // Return error messages if parsing failed
         if (cleaned.isEmpty()) {
-            return List.of("Could not parse response", "Invalid format", "Try again", "Parse error");
+            return List.of("Could not parse response", "Invalid format", "Try again");
         }
-        // Trim to 4 points
-        if (cleaned.size() >= 4) {
-            return cleaned.subList(0, 4);
+        
+        // Trim to 9 points
+        if (cleaned.size() >= 9) {
+            return cleaned.subList(0, 9);
         }
-        // generic advice if fewer than 4 points
-        while (cleaned.size() < 4) {
-            cleaned.add("Drive carefully");
+        
+        // If fewer than 9 points, pad with specific advice
+        while (cleaned.size() < 9) {
+            cleaned.add("Monitor weather conditions along the route and adjust speed accordingly");
         }
         return cleaned;
     }
