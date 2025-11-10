@@ -77,8 +77,7 @@ public class AdviceController {
                             "name", s.name(),
                             "lon", s.longitude(),
                             "lat", s.latitude()
-                    )).toList(),
-                    "cameras", List.of()
+                    )).toList()
             );
             return new AdviceResponse(aiResponse, summary, mapData);
         } catch (Exception e) {
@@ -87,7 +86,7 @@ public class AdviceController {
             return new AdviceResponse(
                     List.of("Error occurred", "Invalid request", "Check time format", "Try again"),
                     Map.of("stationsUsed", 0, "window", Map.of(), "hazards", List.of()),
-                    Map.of("route", Map.of(), "stations", List.of(), "cameras", List.of())
+                    Map.of("route", Map.of(), "stations", List.of())
             );
         }
     }

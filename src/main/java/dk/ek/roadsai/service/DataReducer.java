@@ -42,20 +42,13 @@ public class DataReducer {
             facts.windMs = entry.getValue().stream().map(StationObservation::windMs).filter(Objects::nonNull).max(Double::compare).orElse(null);
             facts.minTempC = entry.getValue().stream().map(StationObservation::tempC).filter(Objects::nonNull).min(Double::compare).orElse(null);
             facts.minVisM = entry.getValue().stream().map(StationObservation::visibilityM).filter(Objects::nonNull).min(Double::compare).orElse(null);
-            facts.precipType = dominant(entry.getValue().stream().map(StationObservation::precipType).toList());
+            facts.precipType = entry.getValue().stream()
+                    .map(StationObservation::precipType)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
             out.put(entry.getKey(), facts);
         }
         return out;
-    }
-
-    ///  TODO: CHECK IF THIS IS NECCESSARY
-    private String dominant(List<String> values) {
-        return values.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.groupingBy(v -> v, Collectors.counting()))
-                .entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse(null);
     }
 }
