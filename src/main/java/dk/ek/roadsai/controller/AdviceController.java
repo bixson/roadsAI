@@ -30,16 +30,19 @@ public class AdviceController {
     private final DataReducer dataReducer;
     private final PromptBuilder promptBuilder;
     private final OpenAiService openAiService;
+    private final HazardDetector hazardDetector;
 
     public AdviceController(RouteService routeService, TimeWindowService timeWindowService,
                             StationService stationService, DataReducer dataReducer,
-                            PromptBuilder promptBuilder, OpenAiService openAiService) {
+                            PromptBuilder promptBuilder, OpenAiService openAiService,
+                            HazardDetector hazardDetector) {
         this.routeService = routeService;
         this.timeWindowService = timeWindowService;
         this.stationService = stationService;
         this.dataReducer = dataReducer;
         this.promptBuilder = promptBuilder;
         this.openAiService = openAiService;
+        this.hazardDetector = hazardDetector;
     }
 
     @PostMapping(value = "/advice", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -62,13 +65,14 @@ public class AdviceController {
                     " obs=" + obs.size());
 
             var segments = dataReducer.reduceToSegments(obs); // reduce → segment fact
+            var hazards = hazardDetector.detectHazards(segments); // detect hazards from API data
             var user = promptBuilder.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments); // build prompt (ask LLM)
             var aiResponse = openAiService.ask(promptBuilder.systemPrompt(), user);
             // build response
             Map<String, Object> summary = Map.of(
                     "stationsUsed", corridor.size(),
                     "window", Map.of("from", timeWindow.get("from").toString(), "to", timeWindow.get("to").toString()), // time window used
-                    "hazards", List.of()
+                    "hazards", hazards // hazards detected from API data
             );
             Map<String, Object> mapData = Map.of(
                     "route", Map.of("type", "LineString", "coordinates", routeGeo), // route coordinates
