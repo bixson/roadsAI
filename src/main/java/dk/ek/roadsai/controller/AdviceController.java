@@ -7,7 +7,9 @@ import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
 import dk.ek.roadsai.service.*;
 import dk.ek.roadsai.util.GeoDistance;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,7 +52,19 @@ public class AdviceController {
     }
 
     @PostMapping(value = "/advice", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public AdviceResponse advice(@RequestBody AdviceRequest request) {
+    public ResponseEntity<AdviceResponse> advice(@RequestBody AdviceRequest request) {
+        // request validation
+        if (request == null || request.from() == null || request.from().isBlank() ||
+            request.to() == null || request.to().isBlank() ||
+            request.mode() == null || request.mode().isBlank() ||
+            request.timeIso() == null || request.timeIso().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new AdviceResponse(
+                    List.of("Invalid request", "Missing required fields", "Check from, to, mode, and timeIso", "All fields required", "Please provide valid input", "Request format error", "Try again", "Invalid input", "Retry request"),
+                    Map.of("stationsUsed", 0, "window", Map.of(), "hazards", List.of()),
+                    Map.of("route", Map.of(), "stations", List.of())
+            ));
+        }
+        
         try { // Fetch route, get weather data, generate AI advice, build response
             // Fetch route
             var routeGeo = routeService.getCoordinates();
@@ -95,15 +109,14 @@ public class AdviceController {
                             "lat", s.latitude()
                     )).toList()
             );
-            return new AdviceResponse(aiResponse, summary, mapData);
+            return ResponseEntity.ok(new AdviceResponse(aiResponse, summary, mapData));
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
-            // nice user-friendly error response (fallback)
-            return new AdviceResponse(
-                    List.of("Error occurred", "Invalid request", "Check time format", "Try again"),
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new AdviceResponse(
+                    List.of("Error occurred", "Invalid request", "Check time format", "Try again", "Service unavailable", "Please retry", "Connection issue", "API error", "Retry request"),
                     Map.of("stationsUsed", 0, "window", Map.of(), "hazards", List.of()),
                     Map.of("route", Map.of(), "stations", List.of())
-            );
+            ));
         }
     }
 

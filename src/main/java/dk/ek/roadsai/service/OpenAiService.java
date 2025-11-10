@@ -62,7 +62,7 @@ public class OpenAiService {
                     .block(); // close stream
 
             if (response == null || response.choices == null || response.choices.isEmpty()) {
-                return List.of("No response from AI", "Try again later", "Service unavailable");
+                return List.of("No response from AI", "Try again later", "Service unavailable", "AI service error", "Please retry", "Connection issue", "Response empty", "API error", "Retry request");
             }
 
             String content = response.choices.get(0).message.content; // Extract content from first choice
@@ -70,7 +70,7 @@ public class OpenAiService {
 
         } catch (Exception e) {
             System.out.println("OpenAI error: " + e.getMessage());
-            return List.of("AI service unavailable", "Network error", "API timeout", "Try again");
+            return List.of("AI service unavailable", "Network error", "API timeout", "Try again", "Service error", "Connection failed", "Please retry", "Request failed", "Service down");
         }
     }
 
@@ -78,7 +78,7 @@ public class OpenAiService {
     // Pads with specific advice if fewer than 9 points returned
     private List<String> parseAdvicePoints(String content) {
         if (content == null || content.isBlank()) {
-            return List.of("Empty response", "No advice available", "Try again");
+            return List.of("Empty response", "No advice available", "Try again", "Error parsing", "Invalid response", "Please retry", "No data", "Response empty", "Retry request");
         }
 
         // Split into lines and filter out blank entries
@@ -112,7 +112,7 @@ public class OpenAiService {
         
         // Return error messages if parsing failed
         if (cleaned.isEmpty()) {
-            return List.of("Could not parse response", "Invalid format", "Try again");
+            return List.of("Could not parse response", "Invalid format", "Try again", "Parse error", "Response format issue", "Please retry", "No valid advice", "Parse failed", "Retry request");
         }
         
         // Trim to 9 points

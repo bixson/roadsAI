@@ -86,9 +86,6 @@ public class VegagerdinProvider implements StationProvider {
         } catch (Exception e) {
             return List.of(); // JSON parsing failed
         }
-//        if (vedur == null || vedur.isEmpty()) {
-//            return List.of(); // No data in JSON
-//        }
 
         // 3) Filter for requested station
         // Accept observations from last 2 hours
