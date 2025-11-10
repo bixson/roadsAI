@@ -107,6 +107,7 @@ public final class GeoDistance {
         }
     }
 
+    // Find the closest point on a route segment to a weather station.
     // returns distance (m) and tClamped (0..1 along segment) of projection
     private static Projection projectPointOnSegment(double lat, double lon, List<Double> a, List<Double> b) {
         Objects.requireNonNull(a, "segment point a");
