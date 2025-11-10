@@ -35,15 +35,31 @@ public class PromptBuilder {
             // Add CAP alerts FIRST (official warnings take priority)
             if (s.alerts != null && !s.alerts.isEmpty()) {
                 for (var alert : s.alerts) {
-                    String alertText = "OFFICIAL ALERT: ";
+                    String alertText = null;
                     if (alert.headline != null && !alert.headline.isBlank()) {
-                        alertText += alert.headline;
+                        alertText = "OFFICIAL ALERT: " + alert.headline;
                     } else if (alert.description != null && !alert.description.isBlank()) {
-                        alertText += alert.description;
-                    } else {
-                        alertText += alert.eventType + " (" + alert.severity + ")";
+                        alertText = "OFFICIAL ALERT: " + alert.description;
+                    } else {git
+                        StringBuilder fallback = new StringBuilder();
+                        if (alert.eventType != null && !alert.eventType.isBlank()) {
+                            fallback.append(alert.eventType);
+                        }
+                        if (alert.severity != null && !alert.severity.isBlank()) {
+                            if (fallback.length() > 0) {
+                                fallback.append(" (").append(alert.severity).append(")");
+                            } else {
+                                fallback.append(alert.severity);
+                            }
+                        }
+                        if (fallback.length() > 0) {
+                            alertText = "OFFICIAL ALERT: " + fallback.toString();
+                        }
+                        // If no useful information, skip this alert entirely
                     }
-                    dataParts.add(alertText);
+                    if (alertText != null) {
+                        dataParts.add(alertText);
+                    }
                 }
             }
             
