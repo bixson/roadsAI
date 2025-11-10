@@ -9,7 +9,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Vedur.is (IMO) AWS station provider
@@ -24,8 +26,9 @@ public class VedurAwsProvider implements StationProvider {
 
     //caching
     private static final Duration TTL = Duration.ofSeconds(90);
-    private Instant lastFetchAt = Instant.EPOCH;
-    private List<VedurAwsDto.Aws10minBasic> lastResponse = null;
+    private Map<String, List<VedurAwsDto.Aws10minBasic>> cacheData = new HashMap<>();
+    private Map<String, Instant> cacheTime = new HashMap<>();
+
     //fixed for RVK↔IFJ
     private final List<Station> registry = List.of(
             new Station("imo:1475", "vedur.is Reykjavík, Faxaflói", 64.1275, -21.902, "IMO"),
@@ -45,46 +48,47 @@ public class VedurAwsProvider implements StationProvider {
                 ? stationId.substring("imo:".length())
                 : stationId;
 
-        // Fetch all stations in bulk (with caching) to reduce API calls
-        List<VedurAwsDto.Aws10minBasic> allStations = getAllStations();
-        if (allStations == null || allStations.isEmpty()) {
-            return List.of();
+        // return cached data if less than 90 seconds old
+        List<VedurAwsDto.Aws10minBasic> cached = cacheData.get(id);
+        Instant cachedTime = cacheTime.get(id);
+        if (cached != null && cachedTime != null && Duration.between(cachedTime, Instant.now()).compareTo(TTL) < 0) {
+            // Accept only observations from last 1 hour (winter weather can changes quickly)
+            Instant oneHourAgo = Instant.now().minusSeconds(3600);
+            return VedurAwsDto.map(stationId, cached).stream()
+                    .filter(o -> o.timestamp().isAfter(oneHourAgo))
+                    .toList();
         }
 
-        // Filter bulk response for requested station and time window
-        return allStations.stream()
-                .filter(s -> s.stationId != null && s.stationId.equals(id)) // Match station ID
-                .flatMap(s -> VedurAwsDto.map(stationId, List.of(s)).stream()) // Convert DTO to model
-                .filter(o -> !o.timestamp().isBefore(from) && !o.timestamp().isAfter(to)) // Apply time filter
-                .toList();
-    }
-
-    // get all cached stations, refresh if cache expired
-    private List<VedurAwsDto.Aws10minBasic> getAllStations() {
-        // Check cache validity: return cached data if less than 90 seconds old
-        if (lastResponse != null && Duration.between(lastFetchAt, Instant.now()).compareTo(TTL) < 0) {
-            return lastResponse;
-        }
-        // else fetch fresh data + update cache
+        // Fetch fresh observations for requested station
         try {
             List<VedurAwsDto.Aws10minBasic> response = http.get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/weather/observations/aws/10min/latest") // Latest 10-minute observations
-                            .queryParam("station_id", "1475,2481,2642") // Bulk request for all route stations
+                            .path("/weather/observations/aws/10min/latest")
+                            .queryParam("station_id", id)
                             .build())
                     .retrieve()
-                    // Convert HTTP errors (4xx/5xx) to exceptions with response body for debugging
                     .onStatus(status -> status.value() >= 400,
                             resp -> resp.bodyToMono(String.class).map(body ->
                                     new RuntimeException("IMO latest failed " + resp.statusCode() + " body=" + body)))
                     .bodyToMono(new ParameterizedTypeReference<List<VedurAwsDto.Aws10minBasic>>() {})
                     .block();
-            // Update cache with fresh data
-            lastResponse = response != null ? response : List.of();
-            lastFetchAt = Instant.now();
-            return lastResponse;
+
+            if (response == null || response.isEmpty()) {
+                return List.of();
+            }
+
+            // Update cache
+            cacheData.put(id, response);
+            cacheTime.put(id, Instant.now());
+
+            // Accept only observations from last 1 hour
+            Instant oneHourAgo = Instant.now().minusSeconds(3600);
+            return VedurAwsDto.map(stationId, response).stream()
+                    .filter(o -> o.timestamp().isAfter(oneHourAgo))
+                    .toList();
         } catch (Exception e) {
-            return lastResponse != null ? lastResponse : List.of(); // return empty list on error
+            System.out.println("[VedurAwsProvider] Error fetching station " + stationId + ": " + e.getMessage());
+            return List.of();
         }
     }
 }

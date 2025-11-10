@@ -88,13 +88,15 @@ public class VegagerdinProvider implements StationProvider {
             return List.of(); // No data in XML
         }
 
-        // 3) Filter for requested station + time window
+        // 3) Filter for requested station
+        // Accept only observations from last 1 hour (winter weather changes quickly)
         final ZoneId zone = ZoneId.of("Atlantic/Reykjavik");
+        Instant oneHourAgo = Instant.now().minusSeconds(3600);
         return root.vedur.stream()
                 .filter(v -> v != null && v.nr != null && v.nr.equals(nrWanted)) // Match station number
                 .map(v -> toObs(stationId, v, zone)) // Convert XML DTO to model
                 .filter(Objects::nonNull)// Skip malformed observations
-                .filter(o -> !o.timestamp().isBefore(from) && !o.timestamp().isAfter(to)) // Apply time filter
+                .filter(o -> o.timestamp().isAfter(oneHourAgo)) // Accept only recent data (last 1 hour)
                 .collect(Collectors.toList());
     }
 

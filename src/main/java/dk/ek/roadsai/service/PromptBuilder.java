@@ -16,6 +16,12 @@ public class PromptBuilder {
         StringBuilder sb = new StringBuilder();
         // Add route context header
         sb.append("Route: ").append(routeId).append(" | Mode: ").append(mode).append(" | Time: ").append(isoTime).append("\n\n");
+        
+        if (segs.isEmpty()) {
+            sb.append("No weather observations available for this route at the specified time.");
+            return sb.toString();
+        }
+        
         sb.append("Weather observations along route segments:\n");
 
         // Format each station's weather data
@@ -55,6 +61,9 @@ public class PromptBuilder {
                     sb.append(", ");
                 }
                 sb.append("precipitation=").append(s.precipType); // "rain", "snow"
+            }
+            if (!hasData && s.precipType == null) {
+                sb.append("no data available");
             }
             sb.append("\n");
         }

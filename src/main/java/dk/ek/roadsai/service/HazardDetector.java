@@ -37,6 +37,7 @@ public class HazardDetector {
         // Add header to hazards list so it appears in API response
         hazards.add("Official Weather Warnings (Icelandic Road Safety Office):");
 
+        boolean foundHazard = false;
         for (var entry : segments.entrySet()) {
             var facts = entry.getValue();
             String stationName = facts.name;
@@ -45,10 +46,13 @@ public class HazardDetector {
             if (facts.windMs != null) {
                 if (facts.windMs >= WARNING_3_WIND) {
                     hazards.add("Warning Level 3: Wind " + String.format("%.1f", facts.windMs) + " m/s at " + stationName + " - Unconditional stop recommended");
+                    foundHazard = true;
                 } else if (facts.windMs >= WARNING_2_WIND) {
                     hazards.add("Warning Level 2: Wind " + String.format("%.1f", facts.windMs) + " m/s at " + stationName + " - Reduce speed significantly");
+                    foundHazard = true;
                 } else if (facts.windMs >= WARNING_1_WIND) {
                     hazards.add("Warning Level 1: Wind " + String.format("%.1f", facts.windMs) + " m/s at " + stationName + " - Drive carefully");
+                    foundHazard = true;
                 }
             }
 
@@ -56,24 +60,34 @@ public class HazardDetector {
             if (facts.maxGustMs != null) {
                 if (facts.maxGustMs >= WARNING_3_GUST) {
                     hazards.add("Severe gusts " + String.format("%.1f", facts.maxGustMs) + " m/s at " + stationName + " - Extreme caution");
+                    foundHazard = true;
                 } else if (facts.maxGustMs >= WARNING_2_GUST) {
                     hazards.add("Strong gusts " + String.format("%.1f", facts.maxGustMs) + " m/s at " + stationName);
+                    foundHazard = true;
                 } else if (facts.maxGustMs >= WARNING_1_GUST) {
                     hazards.add("Gusts " + String.format("%.1f", facts.maxGustMs) + " m/s at " + stationName + " - Reduced stability");
+                    foundHazard = true;
                 }
             }
 
             // Check visibility hazards
             if (facts.minVisM != null && facts.minVisM < LOW_VISIBILITY) {
                 hazards.add("Low visibility " + String.format("%.0f", facts.minVisM) + "m at " + stationName + " - Reduced reaction time");
+                foundHazard = true;
             }
 
             // Check freezing conditions
             if (facts.minTempC != null && facts.minTempC <= FREEZING_TEMP) {
                 if (facts.precipType != null && (facts.precipType.contains("snow") || facts.precipType.contains("rain"))) {
                     hazards.add("Freezing conditions " + String.format("%.1f", facts.minTempC) + "°C with " + facts.precipType + " at " + stationName + " - Ice risk");
+                    foundHazard = true;
                 }
             }
+        }
+
+        // If no hazards detected, add message
+        if (!foundHazard) {
+            hazards.add("No hazards detected for given route - conditions are within safe limits");
         }
 
         return hazards;
