@@ -40,7 +40,7 @@ public class PromptBuilder {
                         alertText = "OFFICIAL ALERT: " + alert.headline;
                     } else if (alert.description != null && !alert.description.isBlank()) {
                         alertText = "OFFICIAL ALERT: " + alert.description;
-                    } else {git
+                    } else {
                         StringBuilder fallback = new StringBuilder();
                         if (alert.eventType != null && !alert.eventType.isBlank()) {
                             fallback.append(alert.eventType);
