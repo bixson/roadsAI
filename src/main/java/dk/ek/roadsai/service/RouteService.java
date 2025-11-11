@@ -3,6 +3,8 @@ package dk.ek.roadsai.service;
 import dk.ek.roadsai.util.GeoDistance;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +32,18 @@ public class RouteService {
 
     // returns raw coordinate list
     public List<List<Double>> getCoordinates() {
+        return RVK_ISF;
+    }
+
+    // returns coordinate list, reversed for route switch (ifj->rvk)
+    public List<List<Double>> getCoordinates(String from, String to) {
+        if ("IFJ".equals(from) && "RVK".equals(to)) {
+            // Reverse route for IFJ → RVK
+            List<List<Double>> reversed = new ArrayList<>(RVK_ISF);
+            Collections.reverse(reversed);
+            return reversed;
+        }
+        // Default: RVK → IFJ
         return RVK_ISF;
     }
 

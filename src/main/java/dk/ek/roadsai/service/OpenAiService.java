@@ -43,7 +43,7 @@ public class OpenAiService {
     // Sends system and user prompts to OpenAI, returns exactly 9 advice points(stations on-route)
     // Returns fallback messages on API errors or timeouts
     public List<String> ask(String systemPrompt, String userPrompt) {
-        try { // Build request with system context and user query
+        try { // Build request with system and user prompts
             OpenAiRequest request = new OpenAiRequest();
             request.model = model;
             request.messages = List.of(

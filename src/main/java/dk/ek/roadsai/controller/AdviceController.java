@@ -66,8 +66,8 @@ public class AdviceController {
         }
         
         try { // Fetch route, get weather data, generate AI advice, build response
-            // Fetch route
-            var routeGeo = routeService.getCoordinates();
+            // Fetch route (reversed if IFJ → RVK)
+            var routeGeo = routeService.getCoordinates(request.from(), request.to());
             var routeKm = estimateRouteKm(routeGeo);
 
             var t = Instant.parse(request.timeIso());
@@ -92,8 +92,9 @@ public class AdviceController {
 
             var segments = dataReducer.reduceToSegments(obs, corridor, stationAlerts); // reduce → segment fact with station names
             var hazards = hazardDetector.detectHazards(segments); // detect hazards from API data
-            var user = promptBuilder.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments); // build prompt (ask LLM)
-            var aiResponse = openAiService.ask(promptBuilder.systemPrompt(), user);
+            var systemPrompt = promptBuilder.buildSystemPrompt(); // build system prompt (role/tone/style)
+            var userPrompt = promptBuilder.buildUserPrompt("rvk-isf", request.mode(), request.timeIso(), segments, request.from(), request.to()); // build user prompt (rules/data)
+            var aiResponse = openAiService.ask(systemPrompt, userPrompt); // ask OpenAI for advice
             // build response
             Map<String, Object> summary = Map.of(
                     "stationsUsed", corridor.size(),
