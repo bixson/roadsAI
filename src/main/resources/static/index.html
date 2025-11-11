@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadsAI - Iceland Road Safety Forecast</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>RoadsAI</h1>
+            <p class="subtitle">Iceland Road Safety Forecast</p>
+        </header>
+
+        <main class="main">
+            <form id="adviceForm" class="form">
+                <div class="form-group">
+                    <label for="from">From</label>
+                    <select id="from" name="from" required>
+                        <option value="RVK">Reykjavík</option>
+                        <option value="IFJ">Ísafjörður</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="to">To</label>
+                    <select id="to" name="to" required>
+                        <option value="IFJ">Ísafjörður</option>
+                        <option value="RVK">Reykjavík</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="mode">Mode</label>
+                    <select id="mode" name="mode" required>
+                        <option value="departure">Departure</option>
+                        <option value="arrival">Arrival</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="time">Time (UTC)</label>
+                    <input type="datetime-local" id="time" name="time" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Get Road Safety Advice</button>
+            </form>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Analyzing weather conditions...</p>
+            </div>
+
+            <div id="error" class="error hidden"></div>
+
+            <div id="results" class="results hidden">
+                <section class="hazards-section">
+                    <h2>Weather Warnings</h2>
+                    <ul id="hazardsList" class="hazards-list"></ul>
+                </section>
+
+                <section class="advice-section">
+                    <h2>Route Advice</h2>
+                    <ol id="adviceList" class="advice-list"></ol>
+                </section>
+
+                <section class="summary-section">
+                    <h2>Summary</h2>
+                    <div id="summaryInfo" class="summary-info"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
