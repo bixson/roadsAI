@@ -1,0 +1,10 @@
+/* Error */
+.error {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    color: var(--danger);
+    margin-bottom: 2rem;
+}
+

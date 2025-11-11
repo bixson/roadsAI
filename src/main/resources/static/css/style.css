@@ -1,0 +1,32 @@
+/* CSS Variables & Imports */
+@import url('components/reset.css');
+@import url('components/container.css');
+@import url('components/header.css');
+@import url('components/form.css');
+@import url('components/loading.css');
+@import url('components/error.css');
+@import url('components/results.css');
+@import url('components/utility.css');
+
+:root {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #2a2a2a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --accent: #4a9eff;
+    --accent-hover: #6bb0ff;
+    --danger: #ff4444;
+    --warning: #ffaa00;
+    --success: #44ff44;
+    --border: #333;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
