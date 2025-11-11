@@ -1,4 +1,4 @@
-/* CSS Variables & Imports */
+
 @import url('components/reset.css');
 @import url('components/container.css');
 @import url('components/header.css');
@@ -9,24 +9,38 @@
 @import url('components/utility.css');
 
 :root {
-    --bg-primary: #0a0a0a;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #2a2a2a;
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --accent: #4a9eff;
-    --accent-hover: #6bb0ff;
-    --danger: #ff4444;
-    --warning: #ffaa00;
-    --success: #44ff44;
-    --border: #333;
+    --bg-primary: #0d0d0f;
+    --bg-secondary: #151518;
+    --bg-tertiary: #1e1e23;
+    --bg-elevated: #25252d;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --text-tertiary: #6e6e73;
+    --accent: #5e9fff;
+    --accent-hover: #7ab3ff;
+    --accent-glow: rgba(94, 159, 255, 0.15);
+    --danger: #ff3b30;
+    --warning: #ff9500;
+    --success: #34c759;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --bt-hover: #FC5130;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: var(--bg-primary);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(94, 159, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(94, 159, 255, 0.02) 0%, transparent 50%);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.65;
     min-height: 100vh;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 

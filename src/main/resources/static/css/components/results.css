@@ -1,25 +1,153 @@
-/* Results */
 .results {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 2.5rem;
 }
 
 .hazards-section,
 .advice-section,
 .summary-section {
     background: var(--bg-secondary);
-    padding: 2rem;
-    border-radius: 8px;
+    padding: 2.5rem;
+    border-radius: 16px;
     border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(10px);
 }
 
 .hazards-section h2,
 .advice-section h2,
 .summary-section h2 {
-    margin-bottom: 1.5rem;
-    color: var(--accent);
+    margin-bottom: 1.75rem;
+    color: var(--text-primary);
     font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-align: center;
+}
+
+.hazards-section h2::before,
+.advice-section h2::before,
+.summary-section h2::before {
+    display: none;
+}
+
+.hazards-content {
+    text-align: left;
+}
+
+.hazards-heading {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--warning);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hazards-message {
+    padding: 1.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.hazards-content.has-warnings .hazards-message {
+    border-left: 4px solid var(--warning);
+    background: rgba(255, 149, 0, 0.05);
+}
+
+/* Chat-style Advice */
+.advice-content {
+    display: flex;
+    gap: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.advice-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(94, 159, 255, 0.3);
+}
+
+.advice-avatar::before {
+    content: 'AI';
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.advice-message {
+    flex: 1;
+    background: var(--bg-tertiary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    line-height: 1.7;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.advice-message:hover {
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-md);
+}
+
+.advice-segment {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.advice-segment:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.advice-segment-header {
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.advice-segment-content {
+    color: var(--text-primary);
+}
+
+.advice-segment-content > div {
+    margin-bottom: 0.75rem;
+}
+
+.advice-segment-content > div:last-child {
+    margin-bottom: 0;
 }
 
 .hazards-list {
@@ -27,41 +155,130 @@
 }
 
 .hazards-list li {
-    padding: 1rem;
-    margin-bottom: 0.5rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 0.75rem;
     background: var(--bg-tertiary);
-    border-left: 4px solid var(--warning);
-    border-radius: 4px;
+    border-left: 3px solid var(--warning);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.hazards-list li:hover {
+    background: var(--bg-elevated);
+    transform: translateX(2px);
 }
 
 .advice-list {
-    list-style: decimal;
-    padding-left: 1.5rem;
+    list-style: none;
+    counter-reset: advice-counter;
+    padding-left: 0;
 }
 
 .advice-list li {
-    padding: 1rem;
-    margin-bottom: 0.75rem;
+    counter-increment: advice-counter;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
     background: var(--bg-tertiary);
-    border-radius: 4px;
-    border-left: 4px solid var(--accent);
+    border-radius: 12px;
+    border-left: 3px solid var(--accent);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    position: relative;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.advice-list li::before {
+    content: counter(advice-counter);
+    position: absolute;
+    left: -12px;
+    top: 1.5rem;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(94, 159, 255, 0.3);
+}
+
+.advice-list li {
+    padding-left: 2.5rem;
+}
+
+.advice-list li:hover {
+    background: var(--bg-elevated);
+    transform: translateX(2px);
+    box-shadow: var(--shadow-md);
 }
 
 .summary-info {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
 }
 
 .summary-item {
-    padding: 1rem;
+    padding: 1.5rem;
     background: var(--bg-tertiary);
-    border-radius: 4px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.summary-item:hover {
+    background: var(--bg-elevated);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .summary-item strong {
     display: block;
     color: var(--accent);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+    .hazards-section,
+    .advice-section,
+    .summary-section {
+        padding: 1.75rem;
+    }
+    
+    .advice-content {
+        gap: 0.75rem;
+    }
+    
+    .advice-avatar {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .advice-message {
+        padding: 1.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .hazards-message {
+        padding: 1.25rem;
+    }
+    
+    .summary-info {
+        grid-template-columns: 1fr;
+    }
 }
 

@@ -1,13 +1,12 @@
-/* Container */
 .container {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 3rem 1.5rem;
 }
 
 @media (max-width: 768px) {
     .container {
-        padding: 1rem;
+        padding: 2rem 1rem;
     }
 }
 
