@@ -1,309 +1,54 @@
-// Form handling + API communication
-document.addEventListener('DOMContentLoaded', async () => {
+/**
+ * Loads a script dynamically and returns a Promise
+ */
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+/**
+ * Loads all required JavaScript modules in order
+ */
+async function loadModules() {
+    const modules = [
+        'js/advice-parser.js',
+        'js/advice-display.js',
+        'js/hazards-display.js',
+        'js/summary-display.js',
+        'js/results-display.js',
+        'js/api-client.js',
+        'js/form-handler.js'
+    ];
+    
+    for (const module of modules) {
+        await loadScript(module);
+    }
+}
+
+/**
+ * Initialize the application after all modules are loaded
+ */
+async function initialize() {
     // Load Leaflet before initializing
     if (window.LeafletMap) {
         await window.LeafletMap.loadLeaflet();
     }
-    const form = document.getElementById('adviceForm');
-    const loading = document.getElementById('loading');
-    const error = document.getElementById('error');
-    const results = document.getElementById('results');
-    const timeInput = document.getElementById('time');
-    const submitBtn = document.getElementById('submitBtn');
-    const fromSelect = document.getElementById('from');
-    const toSelect = document.getElementById('to');
-
-    // Set default time to current UTC time
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    timeInput.value = now.toISOString().slice(0, 16);
-
-    // Form validation function
-    function validateForm() {
-        const from = fromSelect.value;
-        const to = toSelect.value;
-        const mode = document.querySelector('input[name="mode"]:checked');
-        const time = timeInput.value;
-        
-        const isValid = from && to && mode && time && from !== to;
-        submitBtn.disabled = !isValid;
-    }
-
-    // Validate on input changes
-    fromSelect.addEventListener('change', () => {
-        const fromValue = fromSelect.value;
-        const toValue = toSelect.value;
-        
-        if (fromValue === toValue) {
-            toSelect.value = fromValue === 'RVK' ? 'IFJ' : 'RVK';
-        }
-        validateForm();
-    });
-
-    toSelect.addEventListener('change', () => {
-        const fromValue = fromSelect.value;
-        const toValue = toSelect.value;
-        
-        if (fromValue === toValue) {
-            fromSelect.value = toValue === 'RVK' ? 'IFJ' : 'RVK';
-        }
-        validateForm();
-    });
-
-    timeInput.addEventListener('input', validateForm);
     
-    // Validate on radio button change
-    document.querySelectorAll('input[name="mode"]').forEach(radio => {
-        radio.addEventListener('change', validateForm);
-    });
-
-    // Initial validation
-    validateForm();
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Disable submit button during request
-        submitBtn.disabled = true;
-        
-        // Hide previous results/errors
-        error.classList.add('hidden');
-        results.classList.add('hidden');
-        loading.classList.remove('hidden');
-        
-        // Clear map if it exists
-        if (window.LeafletMap) {
-            window.LeafletMap.clearMap();
-        }
-        
-        // Get form values
-        const from = fromSelect.value;
-        const to = toSelect.value;
-        const mode = document.querySelector('input[name="mode"]:checked').value;
-        const timeLocal = timeInput.value;
-        
-        // Convert local datetime to ISO-8601 UTC
-        const timeIso = new Date(timeLocal).toISOString();
-        
-        // Prepare request
-        const request = {
-            from,
-            to,
-            mode,
-            timeIso
-        };
-        
-        try {
-            const response = await fetch('/api/advice', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(request)
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            displayResults(data);
-            
-        } catch (err) {
-            showError(`Failed to fetch advice: ${err.message}`);
-        } finally {
-            loading.classList.add('hidden');
-            validateForm(); // Re-enable button if form is still valid
-        }
-    });
+    // Load all application modules
+    await loadModules();
     
-    function showError(message) {
-        error.textContent = message;
-        error.classList.remove('hidden');
-    }
-    
-    function displayResults(data) {
-        // Display hazards - extract heading from first element, rest as message
-        const hazardsContent = document.getElementById('hazardsContent');
-        hazardsContent.innerHTML = '';
-        hazardsContent.classList.remove('has-warnings');
-        
-        // Create message box
-        const message = document.createElement('div');
-        message.className = 'hazards-message';
-        
-        if (data.summaryStats && data.summaryStats.hazards && data.summaryStats.hazards.length > 0) {
-            const hazards = data.summaryStats.hazards;
-            
-            // First element is the heading text - put it INSIDE the message box
-            const headingText = hazards[0];
-            const heading = document.createElement('div');
-            heading.className = 'hazards-message-heading';
-            
-            // Parse heading text - split at "(" if present
-            let primaryText = headingText;
-            let secondaryText = '';
-            const parenIndex = headingText.indexOf('(');
-            if (parenIndex !== -1) {
-                primaryText = headingText.substring(0, parenIndex).trim();
-                secondaryText = headingText.substring(parenIndex).trim();
-            }
-            
-            // Create primary line with icons
-            const primaryLine = document.createElement('div');
-            primaryLine.className = 'heading-line';
-            
-            const icon1 = document.createElement('span');
-            icon1.className = 'warning-icon';
-            icon1.textContent = '⚠️';
-            const primaryTextSpan = document.createElement('span');
-            primaryTextSpan.className = 'heading-line-primary';
-            primaryTextSpan.textContent = primaryText;
-            const icon2 = document.createElement('span');
-            icon2.className = 'warning-icon';
-            icon2.textContent = '⚠️';
-            
-            primaryLine.appendChild(icon1);
-            primaryLine.appendChild(primaryTextSpan);
-            primaryLine.appendChild(icon2);
-            heading.appendChild(primaryLine);
-            
-            // Add secondary line if exists
-            if (secondaryText) {
-                const secondaryLine = document.createElement('div');
-                secondaryLine.className = 'heading-line-secondary';
-                secondaryLine.textContent = secondaryText;
-                heading.appendChild(secondaryLine);
-            }
-            
-            message.appendChild(heading);
-            
-            // Rest of the array is the actual warnings
-            if (hazards.length > 1) {
-                hazardsContent.classList.add('has-warnings');
-                const contentWrapper = document.createElement('div');
-                contentWrapper.className = 'hazards-message-content';
-                contentWrapper.textContent = hazards.slice(1).join(' ');
-                message.appendChild(contentWrapper);
-            } else {
-                const contentWrapper = document.createElement('div');
-                contentWrapper.className = 'hazards-message-content';
-                contentWrapper.textContent = 'No hazards detected for given route - conditions are within safe limits';
-                message.appendChild(contentWrapper);
-            }
-        } else {
-            // Default heading inside message box
-            const heading = document.createElement('div');
-            heading.className = 'hazards-message-heading';
-            
-            // Create primary line with icons
-            const primaryLine = document.createElement('div');
-            primaryLine.className = 'heading-line';
-            
-            const icon1 = document.createElement('span');
-            icon1.className = 'warning-icon';
-            icon1.textContent = '⚠️';
-            const primaryTextSpan = document.createElement('span');
-            primaryTextSpan.className = 'heading-line-primary';
-            primaryTextSpan.textContent = 'Official Weather Warnings';
-            const icon2 = document.createElement('span');
-            icon2.className = 'warning-icon';
-            icon2.textContent = '⚠️';
-            
-            primaryLine.appendChild(icon1);
-            primaryLine.appendChild(primaryTextSpan);
-            primaryLine.appendChild(icon2);
-            heading.appendChild(primaryLine);
-            
-            // Add secondary line
-            const secondaryLine = document.createElement('div');
-            secondaryLine.className = 'heading-line-secondary';
-            secondaryLine.textContent = '(Icelandic Road Safety Office)';
-            heading.appendChild(secondaryLine);
-            
-            message.appendChild(heading);
-            
-            const contentWrapper = document.createElement('div');
-            contentWrapper.className = 'hazards-message-content';
-            contentWrapper.textContent = 'No hazards detected for given route - conditions are within safe limits';
-            message.appendChild(contentWrapper);
-        }
-        
-        hazardsContent.appendChild(message);
-        
-        // Display advice - unified chat-style response with breaks
-        const adviceContent = document.getElementById('adviceContent');
-        adviceContent.innerHTML = '';
-        
-        if (data.advice && data.advice.length > 0) {
-            // Create single chat bubble
-            const avatar = document.createElement('div');
-            avatar.className = 'advice-avatar';
-            adviceContent.appendChild(avatar);
-            
-            const messageBubble = document.createElement('div');
-            messageBubble.className = 'advice-message';
-            
-            // Group advice into segments (every 3 stations = 1 segment)
-            const segmentSize = 3;
-            const segments = [];
-            
-            for (let i = 0; i < data.advice.length; i += segmentSize) {
-                segments.push(data.advice.slice(i, i + segmentSize));
-            }
-            
-            segments.forEach((segment, segmentIndex) => {
-                const segmentDiv = document.createElement('div');
-                segmentDiv.className = 'advice-segment';
-                
-                const header = document.createElement('div');
-                header.className = 'advice-segment-header';
-                header.textContent = `Segment ${segmentIndex + 1}`;
-                segmentDiv.appendChild(header);
-                
-                const content = document.createElement('div');
-                content.className = 'advice-segment-content';
-                content.innerHTML = segment.map(advice => `<div>${advice}</div>`).join('');
-                segmentDiv.appendChild(content);
-                
-                messageBubble.appendChild(segmentDiv);
-            });
-            
-            adviceContent.appendChild(messageBubble);
-        }
-        
-        // Display summary
-        const summaryInfo = document.getElementById('summaryInfo');
-        summaryInfo.innerHTML = '';
-        
-        if (data.summaryStats) {
-            const stats = data.summaryStats;
-            
-            if (stats.stationsUsed !== undefined) {
-                const item = document.createElement('div');
-                item.className = 'summary-item';
-                item.innerHTML = `<strong>Stations Used</strong>${stats.stationsUsed}`;
-                summaryInfo.appendChild(item);
-            }
-            
-            if (stats.window) {
-                const item = document.createElement('div');
-                item.className = 'summary-item';
-                const fromTime = new Date(stats.window.from).toLocaleString();
-                const toTime = new Date(stats.window.to).toLocaleString();
-                item.innerHTML = `<strong>Time Window</strong>${fromTime} - ${toTime}`;
-                summaryInfo.appendChild(item);
-            }
-        }
-        
-        results.classList.remove('hidden');
-        
-        // Initialize Leaflet map - ensure Leaflet is loaded and container is visible
-        if (window.LeafletMap) {
-            setTimeout(() => {
-                window.LeafletMap.initializeMap(data.mapData);
-            }, 100);
-        }
-    }
-});
+    // Initialize form handling
+    initializeForm();
+}
 
+// Start initialization when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+} else {
+    initialize();
+}

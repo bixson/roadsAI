@@ -2,7 +2,6 @@
  * Leaflet Map Module
  * Handles all Leaflet map initialization, routing, and visualization
  */
-
 // Load Leaflet library dynamically
 function loadLeaflet() {
     return new Promise((resolve, reject) => {
@@ -22,10 +21,15 @@ function loadLeaflet() {
     });
 }
 
-// Map state
-let map = null;
-let routeLayer = null;
-let stationMarkers = [];
+// Map state for hazards section
+let hazardsMap = null;
+let hazardsRouteLayer = null;
+let hazardsStationMarkers = [];
+
+// Map state for advice section  
+let adviceMap = null;
+let adviceRouteLayer = null;
+let adviceMapMarkers = [];
 
 /**
  * Get road-following route from OSRM
@@ -84,26 +88,26 @@ async function getRoadRouteWithRetry(waypoints, maxRetries = 3) {
  * Initialize Leaflet map with route and stations
  * @param {Object} mapData - Map data containing route and stations
  */
-async function initializeMap(mapData) {
-    // Ensure Leaflet is loaded
-    if (typeof L === 'undefined') {
-        console.error('Leaflet not loaded');
-        return;
-    }
-    
-    const mapContainer = document.getElementById('hazardsMap');
-    if (!mapContainer) {
-        console.error('Map container not found');
-        return;
-    }
-    
-    // Clear existing map if present
-    if (map) {
-        map.remove();
-        map = null;
-        routeLayer = null;
-        stationMarkers = [];
-    }
+    async function initializeMap(mapData) {
+        // Ensure Leaflet is loaded
+        if (typeof L === 'undefined') {
+            console.error('Leaflet not loaded');
+            return;
+        }
+        
+        const mapContainer = document.getElementById('hazardsMap');
+        if (!mapContainer) {
+            console.error('Map container not found');
+            return;
+        }
+        
+        // Clear existing map if present
+        if (hazardsMap) {
+            hazardsMap.remove();
+            hazardsMap = null;
+            hazardsRouteLayer = null;
+            hazardsStationMarkers = [];
+        }
     
     if (!mapData || !mapData.route || !mapData.stations) {
         console.warn('Missing map data');
@@ -124,86 +128,242 @@ async function initializeMap(mapData) {
     const centerLat = leafletRouteCoords[0][0];
     const centerLon = leafletRouteCoords[0][1];
     
+        try {
+            hazardsMap = L.map('hazardsMap', {
+                zoomControl: true,
+                attributionControl: true
+            }).setView([centerLat, centerLon], 8);
+            
+            // Add satellite tile layer (Esri World Imagery)
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
+                maxZoom: 19
+            }).addTo(hazardsMap);
+            
+            // Wait for map to be ready
+            hazardsMap.whenReady(async () => {
+                // Get road-following route using OSRM - ALWAYS use OSRM, retry if needed
+                const roadRoute = await getRoadRouteWithRetry(routeCoords);
+                
+                if (roadRoute && roadRoute.length > 0) {
+                    // Use road-following route
+                    hazardsRouteLayer = L.polyline(roadRoute, {
+                        color: '#5e9fff',
+                        weight: 4,
+                        opacity: 0.8,
+                        smoothFactor: 1
+                    }).addTo(hazardsMap);
+                } else {
+                    console.error('Failed to get OSRM route after retries');
+                    // Only use direct polyline as absolute last resort
+                    hazardsRouteLayer = L.polyline(leafletRouteCoords, {
+                        color: '#5e9fff',
+                        weight: 4,
+                        opacity: 0.8,
+                        smoothFactor: 1
+                    }).addTo(hazardsMap);
+                }
+                
+                // Add station markers
+                hazardsStationMarkers = [];
+                if (mapData.stations && Array.isArray(mapData.stations)) {
+                    mapData.stations.forEach(station => {
+                        const marker = L.marker([station.lat, station.lon], {
+                            icon: L.divIcon({
+                                className: 'station-marker',
+                                html: '<div class="station-marker-inner"></div>',
+                                iconSize: [12, 12],
+                                iconAnchor: [6, 6]
+                            })
+                        }).addTo(hazardsMap);
+                        
+                        // Add popup with station name
+                        marker.bindPopup(`<strong>${station.name}</strong><br>${station.id}`);
+                        hazardsStationMarkers.push(marker);
+                    });
+                }
+                
+                // Fit map bounds to show route and stations
+                if (hazardsRouteLayer) {
+                    const bounds = hazardsRouteLayer.getBounds();
+                    if (hazardsStationMarkers.length > 0) {
+                        const group = new L.featureGroup([hazardsRouteLayer, ...hazardsStationMarkers]);
+                        hazardsMap.fitBounds(group.getBounds().pad(0.1));
+                    } else {
+                        hazardsMap.fitBounds(bounds.pad(0.1));
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
+    }
+
+/**
+ * Clear the hazards map
+ */
+function clearMap() {
+    if (hazardsMap) {
+        hazardsMap.remove();
+        hazardsMap = null;
+        hazardsRouteLayer = null;
+        hazardsStationMarkers = [];
+    }
+    if (adviceMap) {
+        adviceMap.remove();
+        adviceMap = null;
+        adviceRouteLayer = null;
+        adviceMapMarkers = [];
+    }
+}
+
+/**
+ * Highlight a station marker on the advice map
+ */
+function highlightStation(stationIndex) {
+    if (!adviceMap || !adviceMapMarkers || stationIndex < 0 || stationIndex >= adviceMapMarkers.length) {
+        return;
+    }
+    
+    // Reset all markers
+    adviceMapMarkers.forEach((marker, idx) => {
+        const normalIcon = L.divIcon({
+            className: 'station-marker',
+            html: `<div class="station-marker-inner"><span class="station-number">${idx + 1}</span></div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+        marker.setIcon(normalIcon);
+    });
+    
+    // Highlight selected marker
+    const selectedMarker = adviceMapMarkers[stationIndex];
+    if (selectedMarker) {
+        const highlightedIcon = L.divIcon({
+            className: 'station-marker station-marker-highlighted',
+            html: `<div class="station-marker-inner"><span class="station-number">${stationIndex + 1}</span></div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
+        selectedMarker.setIcon(highlightedIcon);
+        
+        // Pan to marker if needed
+        const bounds = adviceMap.getBounds();
+        if (!bounds.contains(selectedMarker.getLatLng())) {
+            adviceMap.setView(selectedMarker.getLatLng(), adviceMap.getZoom(), { animate: true, duration: 0.5 });
+        } else {
+            // Just open popup
+            selectedMarker.openPopup();
+        }
+    }
+}
+
+/**
+ * Initialize map for advice section
+ */
+async function initializeAdviceMap(mapData) {
+    // Ensure Leaflet is loaded
+    if (typeof L === 'undefined') {
+        console.error('Leaflet not loaded');
+        return;
+    }
+    
+    const mapContainer = document.getElementById('adviceMap');
+    if (!mapContainer) {
+        console.error('Advice map container not found');
+        return;
+    }
+    
+    // Clear existing map if present
+    if (adviceMap) {
+        adviceMap.remove();
+        adviceMap = null;
+        adviceRouteLayer = null;
+        adviceMapMarkers = [];
+    }
+    
+    if (!mapData || !mapData.route || !mapData.stations) {
+        console.warn('Missing map data');
+        return;
+    }
+    
+    // Get route coordinates (waypoints)
+    const routeCoords = mapData.route.coordinates || [];
+    if (routeCoords.length === 0) {
+        return;
+    }
+    
+    // Convert coordinates from [lon, lat] to [lat, lon] for Leaflet
+    const leafletRouteCoords = routeCoords.map(coord => [coord[1], coord[0]]);
+    
+    // Initialize map to show all of Iceland
     try {
-        map = L.map('hazardsMap', {
+        adviceMap = L.map('adviceMap', {
             zoomControl: true,
             attributionControl: true
-        }).setView([centerLat, centerLon], 8);
+        }).setView([64.8, -19.0], 6); // Center of Iceland, zoomed out to show whole country
         
         // Add satellite tile layer (Esri World Imagery)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
             maxZoom: 19
-        }).addTo(map);
+        }).addTo(adviceMap);
         
         // Wait for map to be ready
-        map.whenReady(async () => {
+        adviceMap.whenReady(async () => {
             // Get road-following route using OSRM - ALWAYS use OSRM, retry if needed
             const roadRoute = await getRoadRouteWithRetry(routeCoords);
             
             if (roadRoute && roadRoute.length > 0) {
                 // Use road-following route
-                routeLayer = L.polyline(roadRoute, {
+                adviceRouteLayer = L.polyline(roadRoute, {
                     color: '#5e9fff',
                     weight: 4,
                     opacity: 0.8,
                     smoothFactor: 1
-                }).addTo(map);
+                }).addTo(adviceMap);
             } else {
                 console.error('Failed to get OSRM route after retries');
                 // Only use direct polyline as absolute last resort
-                routeLayer = L.polyline(leafletRouteCoords, {
+                adviceRouteLayer = L.polyline(leafletRouteCoords, {
                     color: '#5e9fff',
                     weight: 4,
                     opacity: 0.8,
                     smoothFactor: 1
-                }).addTo(map);
+                }).addTo(adviceMap);
             }
             
-            // Add station markers
-            stationMarkers = [];
+            // Add station markers with enhanced styling
+            adviceMapMarkers = [];
             if (mapData.stations && Array.isArray(mapData.stations)) {
-                mapData.stations.forEach(station => {
+                mapData.stations.forEach((station, index) => {
                     const marker = L.marker([station.lat, station.lon], {
                         icon: L.divIcon({
                             className: 'station-marker',
-                            html: '<div class="station-marker-inner"></div>',
-                            iconSize: [12, 12],
-                            iconAnchor: [6, 6]
+                            html: `<div class="station-marker-inner"><span class="station-number">${index + 1}</span></div>`,
+                            iconSize: [24, 24],
+                            iconAnchor: [12, 12]
                         })
-                    }).addTo(map);
+                    }).addTo(adviceMap);
                     
                     // Add popup with station name
                     marker.bindPopup(`<strong>${station.name}</strong><br>${station.id}`);
-                    stationMarkers.push(marker);
+                    
+                    // Add click handler to highlight card
+                    marker.on('click', () => {
+                        const event = new CustomEvent('stationMarkerClick', { detail: { index } });
+                        document.dispatchEvent(event);
+                    });
+                    
+                    adviceMapMarkers.push(marker);
                 });
             }
             
-            // Fit map bounds to show route and stations
-            if (routeLayer) {
-                const bounds = routeLayer.getBounds();
-                if (stationMarkers.length > 0) {
-                    const group = new L.featureGroup([routeLayer, ...stationMarkers]);
-                    map.fitBounds(group.getBounds().pad(0.1));
-                } else {
-                    map.fitBounds(bounds.pad(0.1));
-                }
-            }
+            // Keep map showing all of Iceland (don't auto-fit to route)
+            // This ensures users see the full country context
         });
     } catch (error) {
-        console.error('Error initializing map:', error);
-    }
-}
-
-/**
- * Clear the map
- */
-function clearMap() {
-    if (map) {
-        map.remove();
-        map = null;
-        routeLayer = null;
-        stationMarkers = [];
+        console.error('Error initializing advice map:', error);
     }
 }
 
@@ -211,6 +371,8 @@ function clearMap() {
 window.LeafletMap = {
     loadLeaflet,
     initializeMap,
-    clearMap
+    initializeAdviceMap,
+    clearMap,
+    highlightStation
 };
 
