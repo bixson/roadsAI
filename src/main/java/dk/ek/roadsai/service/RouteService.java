@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * hardcoded route Reykjavík ↔ Ísafjörður
@@ -30,11 +29,6 @@ public class RouteService {
             List.of(-23.1239, 66.0746)   // Ísafjörður, N1 bensínstöð
     );
 
-    // returns raw coordinate list
-    public List<List<Double>> getCoordinates() {
-        return RVK_ISF;
-    }
-
     // returns coordinate list, reversed for route switch (ifj->rvk)
     public List<List<Double>> getCoordinates(String from, String to) {
         if ("IFJ".equals(from) && "RVK".equals(to)) {
@@ -45,22 +39,6 @@ public class RouteService {
         }
         // Default: RVK → IFJ
         return RVK_ISF;
-    }
-
-    // Generates GeoJSON Feature for Leaflet map visualization (frontend)
-    public Map<String, Object> getGeoJson() {
-        return Map.of(
-                "type", "Feature",
-                "properties", Map.of(
-                        "id", "rvk-isf",
-                        "name", "Reykjavík ↔ Ísafjörður",
-                        "length_m", getLengthMeters() // Total route distance in meters
-                ),
-                "geometry", Map.of(
-                        "type", "LineString",
-                        "coordinates", RVK_ISF // Ordered waypoint coordinates
-                )
-        );
     }
 
     // Polyline length in meters
