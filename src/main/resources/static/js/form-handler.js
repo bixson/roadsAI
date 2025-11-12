@@ -6,8 +6,8 @@ function initializeForm() {
     const toSelect = document.getElementById('to');
     
     // Set default time to current UTC time
+    // toISOString() already returns UTC, so we can use it directly
     const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     timeInput.value = now.toISOString().slice(0, 16);
     
     // Form validation function
@@ -79,8 +79,9 @@ function initializeForm() {
         const mode = document.querySelector('input[name="mode"]:checked').value;
         const timeLocal = timeInput.value;
         
-        // Convert local datetime to ISO-8601 UTC
-        const timeIso = new Date(timeLocal).toISOString();
+        // Convert datetime-local input (treated as UTC per label) to ISO-8601 UTC
+        // Append 'Z' to indicate UTC, since the form label says "Time (UTC)"
+        const timeIso = timeLocal ? new Date(timeLocal + 'Z').toISOString() : null;
         
         // Prepare request
         const request = {
