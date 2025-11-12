@@ -41,46 +41,70 @@
 
 .hazards-content {
     text-align: left;
-    display: flex;
-    flex-direction: column;
 }
 
 .hazards-message {
-    padding: 2rem;
+    padding: 1.5rem;
     background: var(--bg-tertiary);
-    border-radius: 12px;
-    font-size: 1rem;
-    line-height: 1.7;
-    color: var(--text-primary);
+    border-radius: 10px;
     border: 1px solid var(--border);
-    flex: 1;
-    display: flex;
-    flex-direction: column;
     min-height: 400px;
+    color: var(--text-primary);
 }
 
 .hazards-message-heading {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--warning);
-    margin-bottom: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-bottom: 1rem;
+    margin-bottom: 1.75rem;
+    padding: 1rem 0;
     border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
 }
 
-.hazards-message > div:not(.hazards-message-heading) {
-    flex: 1;
+.hazards-message-heading .heading-line {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.hazards-message-heading .heading-line-primary {
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--warning);
+    text-transform: uppercase;
+}
+
+.hazards-message-heading .heading-line-secondary {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--warning);
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.hazards-message-heading .warning-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: 0.85;
+    filter: brightness(1.1);
+}
+
+.hazards-message-content {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    text-align: center;
+    padding-top: 0.5rem;
 }
 
 .hazards-content.has-warnings .hazards-message {
     border-left: 4px solid var(--warning);
-    background: rgba(255, 149, 0, 0.05);
 }
 
 .hazards-map {
@@ -315,6 +339,7 @@
     
     .hazards-message {
         padding: 1.25rem;
+        min-height: 300px;
     }
     
     .summary-info {
