@@ -65,7 +65,7 @@ public class OpenAiService {
                 return List.of("No response from AI", "Try again later", "Service unavailable", "AI service error", "Please retry", "Connection issue", "Response empty", "API error", "Retry request");
             }
 
-            OpenAiResponse.Choice firstChoice = response.choices.get(0);
+            OpenAiResponse.Choice firstChoice = response.choices.getFirst();
             if (firstChoice == null || firstChoice.message == null || firstChoice.message.content == null) {
                 return List.of("Invalid response format", "Missing message content", "Try again", "Response format error", "Please retry", "Invalid API response", "No content available", "Response error", "Retry request");
             }

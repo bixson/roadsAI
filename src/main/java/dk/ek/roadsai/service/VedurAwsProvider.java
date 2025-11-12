@@ -26,8 +26,8 @@ public class VedurAwsProvider implements StationProvider {
 
     //caching
     private static final Duration TTL = Duration.ofMinutes(15); // 15 min
-    private Map<String, List<VedurAwsDto.Aws10minBasic>> cacheData = new HashMap<>();
-    private Map<String, Instant> cacheTime = new HashMap<>();
+    private final Map<String, List<VedurAwsDto.Aws10minBasic>> cacheData = new HashMap<>();
+    private final Map<String, Instant> cacheTime = new HashMap<>();
 
     //fixed for RVK↔IFJ
     private final List<Station> registry = List.of(
@@ -52,6 +52,7 @@ public class VedurAwsProvider implements StationProvider {
         List<VedurAwsDto.Aws10minBasic> cached = cacheData.get(id);
         Instant cachedTime = cacheTime.get(id);
         if (cached != null && cachedTime != null && Duration.between(cachedTime, Instant.now()).compareTo(TTL) < 0) {
+            // Note: 'from' and 'to' parameters are ignored - API only provides latest data
             // Accept observations from last 2 hours (winter weather reporting can be delayed)
             Instant twoHoursAgo = Instant.now().minusSeconds(7200);
             return VedurAwsDto.map(stationId, cached).stream()
@@ -81,6 +82,7 @@ public class VedurAwsProvider implements StationProvider {
             cacheData.put(id, response);
             cacheTime.put(id, Instant.now());
 
+            // Note: 'from' and 'to' parameters are ignored - API only provides latest data
             // Accept observations from last 2 hours (winter weather reporting can be delayed)
             Instant twoHoursAgo = Instant.now().minusSeconds(7200);
             return VedurAwsDto.map(stationId, response).stream()

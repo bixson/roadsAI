@@ -116,14 +116,14 @@ public class PromptBuilder {
                             fallback.append(alert.eventType);
                         }
                         if (alert.severity != null && !alert.severity.isBlank()) {
-                            if (fallback.length() > 0) {
+                            if (!fallback.isEmpty()) {
                                 fallback.append(" (").append(alert.severity).append(")");
                             } else {
                                 fallback.append(alert.severity);
                             }
                         }
-                        if (fallback.length() > 0) {
-                            alertText = "OFFICIAL ALERT: " + fallback.toString();
+                        if (!fallback.isEmpty()) {
+                            alertText = "OFFICIAL ALERT: " + fallback;
                         }
                         // If no useful information, skip this alert entirely
                     }

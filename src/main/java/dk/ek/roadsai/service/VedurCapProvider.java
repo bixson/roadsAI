@@ -24,8 +24,8 @@ public class VedurCapProvider {
 
     //caching
     private static final Duration TTL = Duration.ofMinutes(30);
-    private Map<String, List<CapAlert>> cache = new HashMap<>();
-    private Map<String, Instant> cacheTime = new HashMap<>();
+    private final Map<String, List<CapAlert>> cache = new HashMap<>();
+    private final Map<String, Instant> cacheTime = new HashMap<>();
 
     /**
      * Fetch CAP alerts for a station location

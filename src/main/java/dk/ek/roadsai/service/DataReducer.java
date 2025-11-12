@@ -21,7 +21,6 @@ public class DataReducer {
     // Container for segment-level(single-station) weather summary statistics
     public static class SegmentFacts {
         public String stationName; // Human-readable station name
-        public String stationId; // Station ID for reference
         public Double maxGustMs;
         public Double windMs;
         public Double minTempC;
@@ -43,7 +42,6 @@ public class DataReducer {
         // Process ALL stations (in order), not just those with observations
         for (Station station : stations) {
             var facts = new SegmentFacts();
-            facts.stationId = station.id();
             facts.stationName = station.name();
             
             List<StationObservation> stationObs = byStation.getOrDefault(station.id(), List.of());

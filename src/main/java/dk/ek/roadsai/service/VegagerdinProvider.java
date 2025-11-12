@@ -82,12 +82,13 @@ public class VegagerdinProvider implements StationProvider {
         // 2) Parse JSON array directly into DTOs
         List<VegagerdinItemDto> vedur;
         try {
-            vedur = json.readValue(xmlStr, new TypeReference<List<VegagerdinItemDto>>() {});
+            vedur = json.readValue(xmlStr, new TypeReference<>() {});
         } catch (Exception e) {
             return List.of(); // JSON parsing failed
         }
 
         // 3) Filter for requested station
+        // Note: 'from' and 'to' parameters are ignored - API only provides recent data (last 2 hours)
         // Accept observations from last 2 hours
         final ZoneId zone = ZoneId.of("Atlantic/Reykjavik");
         Instant twoHoursAgo = Instant.now().minusSeconds(7200);

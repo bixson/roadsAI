@@ -28,12 +28,12 @@ public class VedurAwsDtoTest {
         """;
 
         ObjectMapper om = new ObjectMapper().findAndRegisterModules();
-        List<Aws10minBasic> list = om.readValue(sample, new TypeReference<List<Aws10minBasic>>() {});
+        List<Aws10minBasic> list = om.readValue(sample, new TypeReference<>() {});
         var obs = VedurAwsDto.map("imo:1475", list);
 
         assertEquals(1, obs.size());
-        assertEquals(3.2, obs.get(0).tempC());
-        assertEquals(6.8, obs.get(0).windMs());
-        assertEquals(9.7, obs.get(0).gustMs());
+        assertEquals(3.2, obs.getFirst().tempC());
+        assertEquals(6.8, obs.getFirst().windMs());
+        assertEquals(9.7, obs.getFirst().gustMs());
     }
 }
