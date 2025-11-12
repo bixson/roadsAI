@@ -119,40 +119,45 @@ document.addEventListener('DOMContentLoaded', () => {
         hazardsContent.innerHTML = '';
         hazardsContent.classList.remove('has-warnings');
         
+        // Create message box
+        const message = document.createElement('div');
+        message.className = 'hazards-message';
+        
         if (data.summaryStats && data.summaryStats.hazards && data.summaryStats.hazards.length > 0) {
             const hazards = data.summaryStats.hazards;
             
-            // First element is the heading text
+            // First element is the heading text - put it INSIDE the message box
             const headingText = hazards[0];
             const heading = document.createElement('div');
-            heading.className = 'hazards-heading';
-            heading.innerHTML = '⚠️ ⚠️ ' + headingText;
-            hazardsContent.appendChild(heading);
+            heading.className = 'hazards-message-heading';
+            heading.innerHTML = '⚠️ ' + headingText;
+            message.appendChild(heading);
             
             // Rest of the array is the actual warnings
-            const message = document.createElement('div');
-            message.className = 'hazards-message';
-            
             if (hazards.length > 1) {
                 hazardsContent.classList.add('has-warnings');
                 const warnings = hazards.slice(1).join(' ');
-                message.textContent = warnings;
+                const warningsText = document.createElement('div');
+                warningsText.textContent = warnings;
+                message.appendChild(warningsText);
             } else {
-                message.textContent = 'No hazards detected for given route - conditions are within safe limits';
+                const noHazardsText = document.createElement('div');
+                noHazardsText.textContent = 'No hazards detected for given route - conditions are within safe limits';
+                message.appendChild(noHazardsText);
             }
-            
-            hazardsContent.appendChild(message);
         } else {
+            // Default heading inside message box
             const heading = document.createElement('div');
-            heading.className = 'hazards-heading';
+            heading.className = 'hazards-message-heading';
             heading.innerHTML = '⚠️ Official Weather Warnings (Icelandic Road Safety Office) ⚠️:';
-            hazardsContent.appendChild(heading);
+            message.appendChild(heading);
             
-            const message = document.createElement('div');
-            message.className = 'hazards-message';
-            message.textContent = 'No hazards detected for given route - conditions are within safe limits';
-            hazardsContent.appendChild(message);
+            const noHazardsText = document.createElement('div');
+            noHazardsText.textContent = 'No hazards detected for given route - conditions are within safe limits';
+            message.appendChild(noHazardsText);
         }
+        
+        hazardsContent.appendChild(message);
         
         // Display advice - unified chat-style response with breaks
         const adviceContent = document.getElementById('adviceContent');
