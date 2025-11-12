@@ -114,6 +114,29 @@
     border-radius: 12px;
     border: 1px solid var(--border);
     overflow: hidden;
+    position: relative;
+}
+
+.hazards-map .leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+    border-radius: 12px;
+    background: var(--bg-tertiary);
+    z-index: 0;
+}
+
+.station-marker {
+    background: transparent;
+    border: none;
+}
+
+.station-marker-inner {
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border: 2px solid white;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 /* Chat-style Advice */

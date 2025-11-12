@@ -1,5 +1,9 @@
 // Form handling + API communication
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load Leaflet before initializing
+    if (window.LeafletMap) {
+        await window.LeafletMap.loadLeaflet();
+    }
     const form = document.getElementById('adviceForm');
     const loading = document.getElementById('loading');
     const error = document.getElementById('error');
@@ -66,6 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
         error.classList.add('hidden');
         results.classList.add('hidden');
         loading.classList.remove('hidden');
+        
+        // Clear map if it exists
+        if (window.LeafletMap) {
+            window.LeafletMap.clearMap();
+        }
         
         // Get form values
         const from = fromSelect.value;
@@ -288,6 +297,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         results.classList.remove('hidden');
+        
+        // Initialize Leaflet map - ensure Leaflet is loaded and container is visible
+        if (window.LeafletMap) {
+            setTimeout(() => {
+                window.LeafletMap.initializeMap(data.mapData);
+            }, 100);
+        }
     }
 });
 
