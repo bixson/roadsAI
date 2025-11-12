@@ -1,1 +1,6 @@
 # roadsAI
+
+### This project fetches API data from Vegargerðin and Veðurstofa Íslands to provide real-time information about road conditions and weather in Iceland.
+## screenshots of application:
+![roadsAI-h1.png](src/main/resources/static/images/png/screenshots/roadsAI-h1.png)
+![roadsAI-h2.png](src/main/resources/static/images/png/screenshots/roadsAI-h2.png)
