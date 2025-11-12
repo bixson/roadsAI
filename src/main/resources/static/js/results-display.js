@@ -3,7 +3,10 @@ function displayResults(data) {
     const hazards = data.summaryStats?.hazards || [];
     displayHazards(hazards);
     
-    // Initialize advice map
+    // Display summary in right box
+    displaySummary(data.summaryStats);
+    
+    // Initialize advice map only
     if (window.LeafletMap && data.mapData) {
         setTimeout(() => {
             window.LeafletMap.initializeAdviceMap(data.mapData);
@@ -15,18 +18,7 @@ function displayResults(data) {
         displayAdvice(data.advice);
     }
     
-    // Display summary
-    displaySummary(data.summaryStats);
-    
     // Show results section
     const results = document.getElementById('results');
     results.classList.remove('hidden');
-    
-    // Initialize Leaflet map - ensure Leaflet is loaded and container is visible
-    if (window.LeafletMap) {
-        setTimeout(() => {
-            window.LeafletMap.initializeMap(data.mapData);
-        }, 100);
-    }
 }
-

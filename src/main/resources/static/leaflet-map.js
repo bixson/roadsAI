@@ -21,11 +21,6 @@ function loadLeaflet() {
     });
 }
 
-// Map state for hazards section
-let hazardsMap = null;
-let hazardsRouteLayer = null;
-let hazardsStationMarkers = [];
-
 // Map state for advice section  
 let adviceMap = null;
 let adviceRouteLayer = null;
@@ -85,130 +80,9 @@ async function getRoadRouteWithRetry(waypoints, maxRetries = 3) {
 }
 
 /**
- * Initialize Leaflet map with route and stations
- * @param {Object} mapData - Map data containing route and stations
- */
-    async function initializeMap(mapData) {
-        // Ensure Leaflet is loaded
-        if (typeof L === 'undefined') {
-            console.error('Leaflet not loaded');
-            return;
-        }
-        
-        const mapContainer = document.getElementById('hazardsMap');
-        if (!mapContainer) {
-            console.error('Map container not found');
-            return;
-        }
-        
-        // Clear existing map if present
-        if (hazardsMap) {
-            hazardsMap.remove();
-            hazardsMap = null;
-            hazardsRouteLayer = null;
-            hazardsStationMarkers = [];
-        }
-    
-    if (!mapData || !mapData.route || !mapData.stations) {
-        console.warn('Missing map data');
-        return;
-    }
-    
-    // Get route coordinates (waypoints)
-    const routeCoords = mapData.route.coordinates || [];
-    if (routeCoords.length === 0) {
-        console.warn('No route coordinates');
-        return;
-    }
-    
-    // Convert coordinates from [lon, lat] to [lat, lon] for Leaflet
-    const leafletRouteCoords = routeCoords.map(coord => [coord[1], coord[0]]);
-    
-    // Initialize map centered on first route point
-    const centerLat = leafletRouteCoords[0][0];
-    const centerLon = leafletRouteCoords[0][1];
-    
-        try {
-            hazardsMap = L.map('hazardsMap', {
-                zoomControl: true,
-                attributionControl: true
-            }).setView([centerLat, centerLon], 8);
-            
-            // Add satellite tile layer (Esri World Imagery)
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
-                maxZoom: 19
-            }).addTo(hazardsMap);
-            
-            // Wait for map to be ready
-            hazardsMap.whenReady(async () => {
-                // Get road-following route using OSRM - ALWAYS use OSRM, retry if needed
-                const roadRoute = await getRoadRouteWithRetry(routeCoords);
-                
-                if (roadRoute && roadRoute.length > 0) {
-                    // Use road-following route
-                    hazardsRouteLayer = L.polyline(roadRoute, {
-                        color: '#5e9fff',
-                        weight: 4,
-                        opacity: 0.8,
-                        smoothFactor: 1
-                    }).addTo(hazardsMap);
-                } else {
-                    console.error('Failed to get OSRM route after retries');
-                    // Only use direct polyline as absolute last resort
-                    hazardsRouteLayer = L.polyline(leafletRouteCoords, {
-                        color: '#5e9fff',
-                        weight: 4,
-                        opacity: 0.8,
-                        smoothFactor: 1
-                    }).addTo(hazardsMap);
-                }
-                
-                // Add station markers
-                hazardsStationMarkers = [];
-                if (mapData.stations && Array.isArray(mapData.stations)) {
-                    mapData.stations.forEach(station => {
-                        const marker = L.marker([station.lat, station.lon], {
-                            icon: L.divIcon({
-                                className: 'station-marker',
-                                html: '<div class="station-marker-inner"></div>',
-                                iconSize: [12, 12],
-                                iconAnchor: [6, 6]
-                            })
-                        }).addTo(hazardsMap);
-                        
-                        // Add popup with station name
-                        marker.bindPopup(`<strong>${station.name}</strong><br>${station.id}`);
-                        hazardsStationMarkers.push(marker);
-                    });
-                }
-                
-                // Fit map bounds to show route and stations
-                if (hazardsRouteLayer) {
-                    const bounds = hazardsRouteLayer.getBounds();
-                    if (hazardsStationMarkers.length > 0) {
-                        const group = new L.featureGroup([hazardsRouteLayer, ...hazardsStationMarkers]);
-                        hazardsMap.fitBounds(group.getBounds().pad(0.1));
-                    } else {
-                        hazardsMap.fitBounds(bounds.pad(0.1));
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Error initializing map:', error);
-        }
-    }
-
-/**
- * Clear the hazards map
+ * Clear the advice map
  */
 function clearMap() {
-    if (hazardsMap) {
-        hazardsMap.remove();
-        hazardsMap = null;
-        hazardsRouteLayer = null;
-        hazardsStationMarkers = [];
-    }
     if (adviceMap) {
         adviceMap.remove();
         adviceMap = null;
@@ -370,7 +244,6 @@ async function initializeAdviceMap(mapData) {
 // Export public API
 window.LeafletMap = {
     loadLeaflet,
-    initializeMap,
     initializeAdviceMap,
     clearMap,
     highlightStation

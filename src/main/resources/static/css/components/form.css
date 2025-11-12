@@ -21,7 +21,8 @@
     box-sizing: border-box;
 }
 
-.form-group label {
+.form-group label,
+.form-group-radio > label {
     color: var(--text-secondary);
     font-size: 0.75rem;
     font-weight: 500;
@@ -77,19 +78,6 @@
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
-}
-
-.form-group-radio > label {
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    line-height: 1.25rem;
-    height: 1.25rem;
-    display: flex;
-    align-items: center;
-    margin: 0;
 }
 
 .radio-inputs {

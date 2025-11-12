@@ -7,11 +7,33 @@ function displayHazards(hazards) {
     const message = document.createElement('div');
     message.className = 'hazards-message';
     
+    // Helper function to create primary line with icons
+    function createPrimaryLine(text) {
+        const primaryLine = document.createElement('div');
+        primaryLine.className = 'heading-line';
+        
+        const icon1 = document.createElement('span');
+        icon1.className = 'warning-icon';
+        icon1.textContent = '⚠️';
+        const primaryTextSpan = document.createElement('span');
+        primaryTextSpan.className = 'heading-line-primary';
+        primaryTextSpan.textContent = text;
+        const icon2 = document.createElement('span');
+        icon2.className = 'warning-icon';
+        icon2.textContent = '⚠️';
+        
+        primaryLine.appendChild(icon1);
+        primaryLine.appendChild(primaryTextSpan);
+        primaryLine.appendChild(icon2);
+        return primaryLine;
+    }
+    
+    const heading = document.createElement('div');
+    heading.className = 'hazards-message-heading';
+    
     if (hazards && hazards.length > 0) {
-        // First element is the heading text - put it INSIDE the message box
+
         const headingText = hazards[0];
-        const heading = document.createElement('div');
-        heading.className = 'hazards-message-heading';
         
         // Parse heading text - split at "(" if present
         let primaryText = headingText;
@@ -22,26 +44,8 @@ function displayHazards(hazards) {
             secondaryText = headingText.substring(parenIndex).trim();
         }
         
-        // Create primary line with icons
-        const primaryLine = document.createElement('div');
-        primaryLine.className = 'heading-line';
-        
-        const icon1 = document.createElement('span');
-        icon1.className = 'warning-icon';
-        icon1.textContent = '⚠️';
-        const primaryTextSpan = document.createElement('span');
-        primaryTextSpan.className = 'heading-line-primary';
-        primaryTextSpan.textContent = primaryText;
-        const icon2 = document.createElement('span');
-        icon2.className = 'warning-icon';
-        icon2.textContent = '⚠️';
-        
-        primaryLine.appendChild(icon1);
-        primaryLine.appendChild(primaryTextSpan);
-        primaryLine.appendChild(icon2);
-        heading.appendChild(primaryLine);
-        
-        // Add secondary line if exists
+        heading.appendChild(createPrimaryLine(primaryText));
+
         if (secondaryText) {
             const secondaryLine = document.createElement('div');
             secondaryLine.className = 'heading-line-secondary';
@@ -66,27 +70,7 @@ function displayHazards(hazards) {
         }
     } else {
         // Default heading inside message box
-        const heading = document.createElement('div');
-        heading.className = 'hazards-message-heading';
-        
-        // Create primary line with icons
-        const primaryLine = document.createElement('div');
-        primaryLine.className = 'heading-line';
-        
-        const icon1 = document.createElement('span');
-        icon1.className = 'warning-icon';
-        icon1.textContent = '⚠️';
-        const primaryTextSpan = document.createElement('span');
-        primaryTextSpan.className = 'heading-line-primary';
-        primaryTextSpan.textContent = 'Official Weather Warnings';
-        const icon2 = document.createElement('span');
-        icon2.className = 'warning-icon';
-        icon2.textContent = '⚠️';
-        
-        primaryLine.appendChild(icon1);
-        primaryLine.appendChild(primaryTextSpan);
-        primaryLine.appendChild(icon2);
-        heading.appendChild(primaryLine);
+        heading.appendChild(createPrimaryLine('Official Weather Warnings'));
         
         // Add secondary line
         const secondaryLine = document.createElement('div');
