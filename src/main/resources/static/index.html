@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roads Advisor - Iceland Road Safety Forecast</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Road Advisor</h1>
+            <p class="subtitle">Icelandic Road Safety Advisor</p>
+        </header>
+
+        <main class="main">
+            <form id="adviceForm" class="form">
+                <div class="form-group">
+                    <label for="from">From</label>
+                    <select id="from" name="from" required>
+                        <option value="RVK">Reykjavík</option>
+                        <option value="IFJ">Ísafjörður</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="to">To</label>
+                    <select id="to" name="to" required>
+                        <option value="IFJ">Ísafjörður</option>
+                        <option value="RVK">Reykjavík</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-group-radio">
+                    <label>Mode</label>
+                    <div class="radio-inputs">
+                        <label>
+                            <input class="radio-input" type="radio" name="mode" value="departure" checked required>
+                            <span class="radio-tile">
+                                <span class="radio-icon">
+                                    <img src="images/png/departure.png" alt="Departure">
+                                </span>
+                                <span class="radio-label-text">Depart at</span>
+                            </span>
+                        </label>
+                        <label>
+                            <input class="radio-input" type="radio" name="mode" value="arrival" required>
+                            <span class="radio-tile">
+                                <span class="radio-icon">
+                                    <img src="images/png/arrival.png" alt="Arrival">
+                                </span>
+                                <span class="radio-label-text">Arrive by</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="time">Time (UTC)</label>
+                    <input type="datetime-local" id="time" name="time" required>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn" disabled>Get Advice</button>
+            </form>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Analyzing weather conditions...</p>
+            </div>
+
+            <div id="error" class="error hidden"></div>
+
+            <div id="results" class="results hidden">
+                <section class="hazards-section">
+                    <h2>Weather Warnings</h2>
+                    <div class="hazards-container">
+                        <div id="hazardsContent" class="hazards-content"></div>
+                        <div id="summaryContent" class="summary-content"></div>
+                    </div>
+                </section>
+
+                <section class="advice-section">
+                    <h2>Route Advice</h2>
+                    <div class="advice-map-container">
+                        <div id="adviceMap" class="advice-map"></div>
+                        <div id="adviceContent" class="advice-content"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="leaflet-map.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+
