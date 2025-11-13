@@ -1,4 +1,4 @@
-function displayResults(data) {
+function displayResults(data, forecastTime) {
     // Convert alerts Map to array format for hazards display
     const alertsArray = [];
     if (data.alerts && Object.keys(data.alerts).length > 0) {
@@ -53,9 +53,9 @@ function displayResults(data) {
         });
     }
     
-    // Display advice with observation data
+    // Display advice with observation data and forecastTime for badge
     if (data.advice && data.advice.length > 0) {
-        displayAdvice(data.advice, data.stations || [], observationsByStation);
+        displayAdvice(data.advice, data.stations || [], observationsByStation, forecastTime);
     }
     
     // Show results section

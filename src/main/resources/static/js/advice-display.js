@@ -15,9 +15,12 @@ function cleanStationName(name) {
     return cleaned;
 }
 
-function displayAdvice(adviceArray, stations, observationsByStation) {
+function displayAdvice(adviceArray, stations, observationsByStation, forecastTime) {
     const adviceContent = document.getElementById('adviceContent');
     adviceContent.innerHTML = '';
+
+    // Determine if we're in forecast mode
+    const isForecast = forecastTime !== null;
 
     // Match stations with observations and AI advice
     const stationData = [];
@@ -64,7 +67,7 @@ function displayAdvice(adviceArray, stations, observationsByStation) {
         {icon: 'images/png/chatprompt/road-conditions.png', label: 'Road Conditions'}
     ];
 
-    headerCells.forEach(cell => {
+    headerCells.forEach((cell, index) => {
         const headerCell = document.createElement('div');
         headerCell.className = 'advice-table-header-cell';
         if (cell.icon) {
@@ -77,6 +80,15 @@ function displayAdvice(adviceArray, stations, observationsByStation) {
         const labelSpan = document.createElement('span');
         labelSpan.textContent = cell.label;
         headerCell.appendChild(labelSpan);
+        
+        // Add data type badge to Station header cell
+        if (index === 0) {
+            const dataBadge = document.createElement('span');
+            dataBadge.className = isForecast ? 'data-badge forecast' : 'data-badge current';
+            dataBadge.textContent = isForecast ? 'Future Forecast' : 'Current Observations';
+            headerCell.appendChild(dataBadge);
+        }
+        
         tableHeader.appendChild(headerCell);
     });
 
