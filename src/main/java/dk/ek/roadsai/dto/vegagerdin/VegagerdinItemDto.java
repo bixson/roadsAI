@@ -3,7 +3,6 @@ package dk.ek.roadsai.dto.vegagerdin;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 ///  single instance converter JSON to DTO
-@SuppressWarnings("unused") // Fields are used via Jackson deserialization
 public class VegagerdinItemDto {
     @JsonProperty("Breidd")     public Double breidd;      // Latitude
     @JsonProperty("Lengd")      public Double lengd;       // longitude

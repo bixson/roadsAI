@@ -2,9 +2,7 @@ package dk.ek.roadsai.model;
 
 import java.time.Instant;
 
-/**
- * Station weather observation
- */
+/// Station weather observation
 public record StationObservation(
         String stationId,
         Instant timestamp,

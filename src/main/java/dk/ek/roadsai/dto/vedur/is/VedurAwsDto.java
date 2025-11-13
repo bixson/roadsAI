@@ -13,7 +13,6 @@ import java.util.Objects;
 
 ///  Veðurstofa Íslands returns JSON in API
 @JsonIgnoreProperties(ignoreUnknown = true)
-@SuppressWarnings("unused") // Fields are used via Jackson deserialization
 public class VedurAwsDto {
 
     @JsonProperty("results")
@@ -21,7 +20,6 @@ public class VedurAwsDto {
 
     // 10min basic observation structure from Veðurstofa Íslands(IMO)
     @JsonIgnoreProperties(ignoreUnknown = true)
-    @SuppressWarnings("unused")
     public static class Aws10minBasic {
         @JsonProperty("station_id")
         public String stationId;

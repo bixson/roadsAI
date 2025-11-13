@@ -1,13 +1,12 @@
 package dk.ek.roadsai.controller;
 
-import dk.ek.roadsai.dto.CapAlert;
+import dk.ek.roadsai.dto.vedur.is.CapAlert;
 import dk.ek.roadsai.dto.ObservationsRequest;
 import dk.ek.roadsai.dto.ObservationsResponse;
+import dk.ek.roadsai.model.ForecastPoint;
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
-import dk.ek.roadsai.service.RouteService;
-import dk.ek.roadsai.service.StationService;
-import dk.ek.roadsai.service.VedurCapProvider;
+import dk.ek.roadsai.service.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,26 +16,40 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-// fetched observations and CAP alerts
-// returns raw observation data
+/// Fetches observations and CAP alerts, generates AI advice based on current conditions
 @RestController
 @RequestMapping("/api")
 public class ObservationsController {
     private final RouteService routeService;
     private final StationService stationService;
     private final VedurCapProvider vedurCapProvider;
+    private final ObservationReducer observationReducer;
+    private final ObservationPromptBuilder promptBuilder;
+    private final ObservationAiService aiService;
+    private final YrNoProvider yrNoProvider;
 
     public ObservationsController(
             RouteService routeService,
             StationService stationService,
-            VedurCapProvider vedurCapProvider) {
+            VedurCapProvider vedurCapProvider,
+            ObservationReducer observationReducer,
+            ObservationPromptBuilder promptBuilder,
+            ObservationAiService aiService,
+            YrNoProvider yrNoProvider) {
         this.routeService = routeService;
         this.stationService = stationService;
         this.vedurCapProvider = vedurCapProvider;
+        this.observationReducer = observationReducer;
+        this.promptBuilder = promptBuilder;
+        this.aiService = aiService;
+        this.yrNoProvider = yrNoProvider;
     }
 
     @PostMapping(value = "/observations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -55,13 +68,12 @@ public class ObservationsController {
             // Get stations along route (5km buffer)
             List<Station> corridor = stationService.corridorStations(routeGeo, 5000.0);
             
-            // Fetch latest observations (last 2 hours - APIs return recent data)
-            // TODO: double check caching and minimize down to 15 min
-            Instant twoHoursAgo = Instant.now().minusSeconds(7200);
+            // Fetch latest observations (last 15 min, cache capped for precision)
+            Instant fifteenMinutesAgo = Instant.now().minusSeconds(900);
             List<StationObservation> obs = stationService.fetchObsForStations(
-                corridor, twoHoursAgo, Instant.now());
+                corridor, fifteenMinutesAgo, Instant.now());
             
-            // Fetch CAP alerts for each station
+            // Fetch CAP alerts for each station (30min cache in VedurCapProvider)
             Map<String, List<CapAlert>> stationAlerts = new HashMap<>();
             for (Station station : corridor) {
                 List<CapAlert> alerts = vedurCapProvider.fetchAlerts(
@@ -69,14 +81,49 @@ public class ObservationsController {
                 stationAlerts.put(station.id(), alerts);
             }
             
+            // Reduce observations to station-level facts
+            Map<String, ObservationReducer.StationFacts> stationFacts = 
+                observationReducer.reduceToStations(obs, corridor, stationAlerts);
+            
+            // Parse forecast time if provided - for prompt filtering
+            Instant forecastTime = null;
+            List<ForecastPoint> forecasts = new ArrayList<>();
+            if (request.forecastTime() != null && !request.forecastTime().isBlank()) {
+                try {
+                    Instant parsedTime = Instant.parse(request.forecastTime());
+                    forecastTime = parsedTime;
+                    // Fetch forecasts for station coordinates
+                    List<ForecastPoint> allForecasts = yrNoProvider.fetchForecastForStations(corridor);
+                    // Filter forecasts to requested time window
+                    Instant now = Instant.now();
+                    final Instant finalForecastTime = forecastTime;
+                    forecasts = allForecasts.stream()
+                            .filter(f -> !f.time().isBefore(now) && 
+                                       (f.time().isBefore(finalForecastTime) || f.time().equals(finalForecastTime)))
+                            .collect(Collectors.toList());
+                } catch (DateTimeParseException e) {
+                    System.out.println("Invalid forecastTime format: " + request.forecastTime());
+                    // Continue without forecasts
+                }
+            }
+            
+            // Generate AI advice based on observations (and forecasts, if requested)
+            String systemPrompt = promptBuilder.buildSystemPrompt();
+            String userPrompt = promptBuilder.buildUserPrompt(
+                "rvk-isf", request.from(), request.to(), stationFacts, corridor, forecasts, forecastTime);
+            List<String> advice = aiService.ask(systemPrompt, userPrompt, corridor.size());
+            
             return ResponseEntity.ok(new ObservationsResponse(
                 obs,
                 stationAlerts,
                 corridor,
-                routeGeo
+                routeGeo,
+                advice,
+                forecasts
             ));
         } catch (Exception e) {
             System.out.println("Error fetching observations: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

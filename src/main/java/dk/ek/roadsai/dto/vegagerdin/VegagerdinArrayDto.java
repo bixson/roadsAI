@@ -8,7 +8,6 @@ import java.util.List;
 
 ///  Vegargerðin returns JSON/XML in API
 /// wraps @VegagerdinItemDto into an array
-@SuppressWarnings("unused") // Fields are used via Jackson deserialization
 public class VegagerdinArrayDto {
 
     @JsonProperty("Vedur")

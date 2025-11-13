@@ -13,10 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Vedur.is (IMO) AWS station provider
- * 15 min caching to reduce load on API
- */
+
+/// Vedur.is (IMO) AWS station provider
+// 15 min caching to reduce load on API
 @Service
 public class VedurAwsProvider implements StationProvider {
     private final WebClient http = WebClient.builder()
@@ -52,8 +51,7 @@ public class VedurAwsProvider implements StationProvider {
         List<VedurAwsDto.Aws10minBasic> cached = cacheData.get(id);
         Instant cachedTime = cacheTime.get(id);
         if (cached != null && cachedTime != null && Duration.between(cachedTime, Instant.now()).compareTo(TTL) < 0) {
-            // Note: 'from' and 'to' parameters are ignored - API only provides latest data
-            // Accept observations from last 2 hours (winter weather reporting can be delayed)
+            // Accept observations from last 2 hours
             Instant twoHoursAgo = Instant.now().minusSeconds(7200);
             return VedurAwsDto.map(stationId, cached).stream()
                     .filter(o -> o.timestamp().isAfter(twoHoursAgo))
@@ -71,7 +69,8 @@ public class VedurAwsProvider implements StationProvider {
                     .onStatus(status -> status.value() >= 400,
                             resp -> resp.bodyToMono(String.class).map(body ->
                                     new RuntimeException("IMO latest failed " + resp.statusCode() + " body=" + body)))
-                    .bodyToMono(new ParameterizedTypeReference<List<VedurAwsDto.Aws10minBasic>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<List<VedurAwsDto.Aws10minBasic>>() {
+                    })
                     .block();
 
             if (response == null || response.isEmpty()) {
@@ -82,8 +81,7 @@ public class VedurAwsProvider implements StationProvider {
             cacheData.put(id, response);
             cacheTime.put(id, Instant.now());
 
-            // Note: 'from' and 'to' parameters are ignored - API only provides latest data
-            // Accept observations from last 2 hours (winter weather reporting can be delayed)
+            // Accept observations from last 2 hours
             Instant twoHoursAgo = Instant.now().minusSeconds(7200);
             return VedurAwsDto.map(stationId, response).stream()
                     .filter(o -> o.timestamp().isAfter(twoHoursAgo))

@@ -9,9 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * combined station service for Vegagerðin and vedur.is(IMO)
- */
+/// combined station service for Vegagerðin and vedur.is(IMO)
 @Service
 public class StationService {
     private final StationProvider vegagerdin;
