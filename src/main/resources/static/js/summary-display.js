@@ -2,11 +2,11 @@ function displaySummary(summaryStats) {
     const summaryContent = document.getElementById('summaryContent');
     summaryContent.innerHTML = '';
     
-    // Create message box with its own styling
+    // Create message box
     const message = document.createElement('div');
     message.className = 'summary-message';
     
-    // Create simple, subtle heading
+    // subtle heading
     const heading = document.createElement('div');
     heading.className = 'summary-message-heading';
     
@@ -22,7 +22,7 @@ function displaySummary(summaryStats) {
     
     message.appendChild(heading);
     
-    // Create content wrapper
+    // content wrapper
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'summary-message-content';
     
@@ -34,7 +34,7 @@ function displaySummary(summaryStats) {
     
     message.appendChild(contentWrapper);
     
-    // Add external links section
+    // external links section
     const linksSection = document.createElement('div');
     linksSection.className = 'summary-links';
     

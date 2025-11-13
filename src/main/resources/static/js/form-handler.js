@@ -17,7 +17,7 @@ function initializeForm() {
         const to = toSelect.value;
         const time = timeInput.value;
         
-        // Time is optional, but if provided must be valid
+        // validate time, when provided (within 48hrs)
         let timeValid = true;
         if (time) {
             const currentTime = new Date();
@@ -102,7 +102,7 @@ function initializeForm() {
             showError(`Failed to fetch observations: ${err.message}`);
         } finally {
             loading.classList.add('hidden');
-            validateForm(); // Re-enable button if form is still valid
+            validateForm(); // Re-enable button (if forms valid)
         }
     });
 }

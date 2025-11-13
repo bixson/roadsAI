@@ -91,46 +91,6 @@ function clearMap() {
     }
 }
 
-/**
- * Highlight a station marker on the advice map
- */
-function highlightStation(stationIndex) {
-    if (!adviceMap || !adviceMapMarkers || stationIndex < 0 || stationIndex >= adviceMapMarkers.length) {
-        return;
-    }
-    
-    // Reset all markers
-    adviceMapMarkers.forEach((marker, idx) => {
-        const normalIcon = L.divIcon({
-            className: 'station-marker',
-            html: `<div class="station-marker-inner"><span class="station-number">${idx + 1}</span></div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
-        });
-        marker.setIcon(normalIcon);
-    });
-    
-    // Highlight selected marker
-    const selectedMarker = adviceMapMarkers[stationIndex];
-    if (selectedMarker) {
-        const highlightedIcon = L.divIcon({
-            className: 'station-marker station-marker-highlighted',
-            html: `<div class="station-marker-inner"><span class="station-number">${stationIndex + 1}</span></div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
-        });
-        selectedMarker.setIcon(highlightedIcon);
-        
-        // Pan to marker if needed
-        const bounds = adviceMap.getBounds();
-        if (!bounds.contains(selectedMarker.getLatLng())) {
-            adviceMap.setView(selectedMarker.getLatLng(), adviceMap.getZoom(), { animate: true, duration: 0.5 });
-        } else {
-            // Just open popup
-            selectedMarker.openPopup();
-        }
-    }
-}
 
 /**
  * Initialize map for advice section
@@ -223,12 +183,6 @@ async function initializeAdviceMap(mapData) {
                     // Add popup with station name
                     marker.bindPopup(`<strong>${station.name}</strong><br>${station.id}`);
                     
-                    // Add click handler to highlight card
-                    marker.on('click', () => {
-                        const event = new CustomEvent('stationMarkerClick', { detail: { index } });
-                        document.dispatchEvent(event);
-                    });
-                    
                     adviceMapMarkers.push(marker);
                 });
             }
@@ -245,7 +199,6 @@ async function initializeAdviceMap(mapData) {
 window.LeafletMap = {
     loadLeaflet,
     initializeAdviceMap,
-    clearMap,
-    highlightStation
+    clearMap
 };
 

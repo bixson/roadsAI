@@ -1,6 +1,5 @@
 function displayResults(data) {
     // Convert alerts Map to array format for hazards display
-    // Format: [heading, ...alertDescriptions]
     const alertsArray = [];
     if (data.alerts && Object.keys(data.alerts).length > 0) {
         alertsArray.push('Official Weather Warnings (Icelandic Road Safety Office)');

@@ -235,23 +235,6 @@
     line-height: 1;
 }
 
-.station-marker-highlighted .station-marker-inner {
-    width: 32px;
-    height: 32px;
-    background: var(--accent);
-    border: 3px solid white;
-    box-shadow: 0 0 0 4px var(--accent-glow), 0 4px 12px rgba(0, 0, 0, 0.5);
-    animation: pulseMarker 1.5s ease infinite;
-}
-
-@keyframes pulseMarker {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
-}
 
 /* Route Advice - Horizontal Split Layout */
 .advice-map-container {
@@ -309,41 +292,6 @@
     }
 }
 
-/* Chat-style Advice */
-.advice-chat {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.advice-chat-label {
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    font-weight: 500;
-    margin-bottom: 0.75rem;
-    opacity: 0.9;
-}
-
-.advice-message {
-    width: 100%;
-    background: var(--bg-tertiary);
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    line-height: 1.7;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-    box-shadow: var(--shadow-sm);
-}
-
-.advice-paragraph {
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-}
-
-.advice-paragraph:last-child {
-    margin-bottom: 0;
-}
 
 .advice-station-name {
     font-weight: 600;
@@ -450,16 +398,6 @@
     .advice-map {
         min-height: 300px;
         height: 300px;
-    }
-    
-    .advice-chat-label {
-        font-size: 0.8rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .advice-message {
-        padding: 1.25rem;
-        font-size: 0.9rem;
     }
     
     .advice-station-name {
