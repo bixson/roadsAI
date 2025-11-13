@@ -31,9 +31,18 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="time">Forecast Time (UTC, optional)</label>
-                    <input type="datetime-local" id="time" name="time" step="3600">
+                <div class="form-group form-group-datetime">
+                    <label>Date & Time (UTC, optional)</label>
+                    <div class="datetime-inputs">
+                        <div class="datetime-date-wrapper">
+                            <input type="text" id="dateInput" readonly placeholder="Select date">
+                            <input type="hidden" id="date" name="date" value="">
+                            <div id="calendarPopup" class="calendar-popup hidden"></div>
+                        </div>
+                        <select id="time" name="time">
+                            <option value="">Time</option>
+                        </select>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-submit" id="submitBtn" disabled>Get Advice</button>
