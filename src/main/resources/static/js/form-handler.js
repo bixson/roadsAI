@@ -10,8 +10,9 @@ function initializeForm() {
         const dateInput = document.getElementById('dateInput');
         const calendarPopup = document.getElementById('calendarPopup');
         let selectedDateStr = '';
-        const FORECAST_HOURS = 48;
-        const MAX_TIME_MS = FORECAST_HOURS * 60 * 60 * 1000;
+        // Yr.no API caps at 10 days forecast
+        const FORECAST_DAYS = 10;
+        const MAX_TIME_MS = FORECAST_DAYS * 24 * 60 * 60 * 1000;
         
         function getTodayUTC() {
             const today = new Date();
