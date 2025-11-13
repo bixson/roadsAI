@@ -43,9 +43,20 @@ function displayResults(data) {
         }, 100);
     }
     
-    // Display advice
+    // Group observations by stationId for easy lookup
+    const observationsByStation = {};
+    if (data.observations && Array.isArray(data.observations)) {
+        data.observations.forEach(obs => {
+            if (!observationsByStation[obs.stationId]) {
+                observationsByStation[obs.stationId] = [];
+            }
+            observationsByStation[obs.stationId].push(obs);
+        });
+    }
+    
+    // Display advice with observation data
     if (data.advice && data.advice.length > 0) {
-        displayAdvice(data.advice);
+        displayAdvice(data.advice, data.stations || [], observationsByStation);
     }
     
     // Show results section

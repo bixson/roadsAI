@@ -27,35 +27,56 @@ function parseAdviceText(adviceText) {
         remainingText = contentText.replace(/OFFICIAL ALERT:\s*[^.]+\.?\s*/i, '').trim();
     }
     
-    // Extract temperature - matches "Temperature X.X°C" or "Temperature X°C"
-    // Also handle cases where temp is mentioned in road conditions like "Temperature -1.0°C, Normal conditions..."
+    // Extract temperature - "Temperature X.X°C", "temperatures at X.X°C", "temp X.X°C"
     let temperature = '';
-    const tempMatch = remainingText.match(/Temperature\s+([\d.-]+°C)/i);
-    if (tempMatch) {
-        temperature = tempMatch[1].trim();
-        // Remove temperature from remaining text, including the comma/period after it
-        remainingText = remainingText.replace(/Temperature\s+[\d.-]+°C[,\s\.]*/i, '').trim();
+    const tempPatterns = [
+        /(?:temperature|temp|temperatures)\s+(?:at\s+)?([\d.-]+°C)/i,
+        /([\d.-]+°C).*?(?:temperature|temp)/i
+    ];
+    for (const pattern of tempPatterns) {
+        const tempMatch = remainingText.match(pattern);
+        if (tempMatch) {
+            temperature = tempMatch[1].trim();
+            remainingText = remainingText.replace(pattern, '').trim();
+            break;
+        }
     }
     
-    // Extract wind - matches "wind X.X m/s" or "calm"
+    // Extract wind - "wind X.X m/s", "winds (X.X m/s)", "winds X.X m/s", or "calm"
     let wind = '';
     if (remainingText.toLowerCase().includes('calm')) {
         wind = 'calm';
         remainingText = remainingText.replace(/calm[,\s\.]*/i, '').trim();
     } else {
-        const windMatch = remainingText.match(/wind\s+([\d.]+(?:\s+m\/s)?)/i);
-        if (windMatch) {
-            wind = windMatch[1].trim() + (windMatch[1].includes('m/s') ? '' : ' m/s');
-            remainingText = remainingText.replace(/wind\s+[\d.]+(?:\s+m\/s)?[,\s\.]*/i, '').trim();
+        const windPatterns = [
+            /(?:wind|winds)\s*\(?\s*([\d.]+)\s*m\/s\s*\)?/i,
+            /(?:wind|winds)\s+([\d.]+)(?:\s+m\/s)?/i,
+            /([\d.]+)\s*m\/s.*?(?:wind|winds)/i
+        ];
+        for (const pattern of windPatterns) {
+            const windMatch = remainingText.match(pattern);
+            if (windMatch) {
+                wind = windMatch[1].trim() + ' m/s';
+                remainingText = remainingText.replace(pattern, '').trim();
+                break;
+            }
         }
     }
     
-    // Extract gusts - matches "gusts X.X m/s"
+    // Extract gusts - "gusts X.X m/s", "gusts of X.X m/s", "gusts (X.X m/s)"
     let gusts = '';
-    const gustsMatch = remainingText.match(/gusts\s+([\d.]+(?:\s+m\/s)?)/i);
-    if (gustsMatch) {
-        gusts = gustsMatch[1].trim() + (gustsMatch[1].includes('m/s') ? '' : ' m/s');
-        remainingText = remainingText.replace(/gusts\s+[\d.]+(?:\s+m\/s)?[,\s\.]*/i, '').trim();
+    const gustsPatterns = [
+        /gusts\s*(?:of\s*)?\(?\s*([\d.]+)\s*m\/s\s*\)?/i,
+        /gusts\s+([\d.]+)(?:\s+m\/s)?/i,
+        /([\d.]+)\s*m\/s.*?gusts/i
+    ];
+    for (const pattern of gustsPatterns) {
+        const gustsMatch = remainingText.match(pattern);
+        if (gustsMatch) {
+            gusts = gustsMatch[1].trim() + ' m/s';
+            remainingText = remainingText.replace(pattern, '').trim();
+            break;
+        }
     }
     
     // Road conditions and remaining advice
@@ -69,11 +90,14 @@ function parseAdviceText(adviceText) {
     
     // If temperature wasn't found earlier but is in the original text, extract it
     if (!temperature) {
-        const tempInContent = contentText.match(/Temperature\s+([\d.-]+°C)/i);
-        if (tempInContent) {
-            temperature = tempInContent[1].trim();
-            // Remove temperature from road conditions if it's there
-            roadConditions = roadConditions.replace(/Temperature\s+[\d.-]+°C[,\s\.]*/i, '').trim();
+        for (const pattern of tempPatterns) {
+            const tempInContent = contentText.match(pattern);
+            if (tempInContent) {
+                temperature = tempInContent[1].trim();
+                // Remove temperature from road conditions if it's there
+                roadConditions = roadConditions.replace(pattern, '').trim();
+                break;
+            }
         }
     }
     

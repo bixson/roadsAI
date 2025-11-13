@@ -161,13 +161,13 @@ async function initializeAdviceMap(mapData) {
         return;
     }
     
-    // Get route coordinates (waypoints)
+    // Get route coordinates (waypoints) - backend sends [lon, lat] format
     const routeCoords = mapData.route.coordinates || [];
     if (routeCoords.length === 0) {
         return;
     }
     
-    // Convert coordinates from [lon, lat] to [lat, lon] for Leaflet
+    // Convert coordinates from [lon, lat] to [lat, lon] for Leaflet display
     const leafletRouteCoords = routeCoords.map(coord => [coord[1], coord[0]]);
     
     // Initialize map to show all of Iceland
