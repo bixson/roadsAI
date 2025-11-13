@@ -1,31 +1,174 @@
 function initializeForm() {
     const form = document.getElementById('adviceForm');
-    const timeInput = document.getElementById('time');
+    const dateSelect = document.getElementById('date');
+    const timeSelect = document.getElementById('time');
     const submitBtn = document.getElementById('submitBtn');
     const fromSelect = document.getElementById('from');
     const toSelect = document.getElementById('to');
+
+    function initializeDateTimePickers() {
+        const dateInput = document.getElementById('dateInput');
+        const calendarPopup = document.getElementById('calendarPopup');
+        let selectedDateStr = '';
+        // Yr.no API caps at 10 days forecast
+        const FORECAST_DAYS = 10;
+        const MAX_TIME_MS = FORECAST_DAYS * 24 * 60 * 60 * 1000;
+        
+        function getTodayUTC() {
+            const today = new Date();
+            today.setUTCHours(0, 0, 0, 0);
+            return today;
+        }
+        
+        function buildCalendar() {
+            const now = new Date();
+            const today = getTodayUTC();
+            const todayStr = today.toISOString().slice(0, 10);
+            const maxTime = new Date(now.getTime() + MAX_TIME_MS);
+            
+            // Calculate first day of month and start of calendar grid
+            const currentMonth = new Date(today);
+            const year = currentMonth.getUTCFullYear();
+            const month = currentMonth.getUTCMonth();
+            const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+            const startDate = new Date(firstDayOfMonth);
+            const dayOfWeek = firstDayOfMonth.getUTCDay();
+            startDate.setUTCDate(startDate.getUTCDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+            
+            // Build calendar HTML
+            const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const weekdaysHTML = weekdays.map(day => `<div>${day}</div>`).join('');
+            
+            calendarPopup.innerHTML = `
+                <div class="calendar-header"><span>${monthName}</span></div>
+                <div class="calendar-weekdays">${weekdaysHTML}</div>
+                <div class="calendar-grid"></div>
+            `;
+            
+            const grid = calendarPopup.querySelector('.calendar-grid');
+            
+            // Build 42 days (6 weeks)
+            let currentDate = new Date(startDate);
+            for (let i = 0; i < 42; i++) {
+                const dateStr = currentDate.toISOString().slice(0, 10);
+                const isCurrentMonth = currentDate.getUTCMonth() === month;
+                const isInRange = currentDate >= today && new Date(dateStr + 'T23:59:59Z') <= maxTime;
+                const isSelectable = isCurrentMonth && isInRange;
+                
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'calendar-day';
+                btn.textContent = currentDate.getUTCDate();
+                
+                if (!isCurrentMonth || !isSelectable) {
+                    btn.classList.add('disabled');
+                }
+                if (dateStr === todayStr) {
+                    btn.classList.add('today');
+                }
+                if (dateStr === selectedDateStr) {
+                    btn.classList.add('selected');
+                }
+                
+                if (isSelectable) {
+                    btn.onclick = () => {
+                        selectedDateStr = dateStr;
+                        dateSelect.value = dateStr;
+                        const formattedDate = new Date(dateStr + 'T00:00:00Z').toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                        });
+                        dateInput.value = formattedDate;
+                        calendarPopup.classList.add('hidden');
+                        updateTimeOptions();
+                        validateForm();
+                    };
+                }
+                
+                grid.appendChild(btn);
+                currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+            }
+        }
+        
+        function updateTimeOptions() {
+            const selectedDate = dateSelect.value;
+            timeSelect.innerHTML = '<option value="">Time</option>';
+            
+            if (!selectedDate) return;
+            
+            const now = new Date();
+            const maxTime = new Date(now.getTime() + MAX_TIME_MS);
+            const todayStr = getTodayUTC().toISOString().slice(0, 10);
+            const isToday = selectedDate === todayStr;
+            
+            let startHour = 0;
+            let startMinute = 0;
+            
+            if (isToday) {
+                const currentHour = now.getUTCHours();
+                const currentMinute = now.getUTCMinutes();
+                const roundedMinute = Math.floor(currentMinute / 15) * 15;
+                
+                // Allow times within last 15 minutes
+                if (currentMinute - roundedMinute <= 15) {
+                    startHour = currentHour;
+                    startMinute = roundedMinute;
+                } else {
+                    startHour = currentHour;
+                    startMinute = roundedMinute + 15;
+                    if (startMinute >= 60) {
+                        startMinute = 0;
+                        startHour++;
+                    }
+                }
+            }
+            
+            // Generate time options (15-minute intervals)
+            for (let hour = startHour; hour < 24; hour++) {
+                const startMinForHour = (hour === startHour) ? startMinute : 0;
+                
+                for (let minute = startMinForHour; minute < 60; minute += 15) {
+                    const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    const timeDate = new Date(`${selectedDate}T${timeStr}:00Z`);
+                    
+                    if (timeDate > maxTime) break;
+                    
+                    timeSelect.innerHTML += `<option value="${timeStr}">${timeStr}</option>`;
+                }
+            }
+        }
+        
+        dateInput.onclick = () => {
+            calendarPopup.classList.remove('hidden');
+            buildCalendar();
+        };
+        
+        document.addEventListener('click', (e) => {
+            const dateWrapper = dateInput.closest('.datetime-date-wrapper');
+            if (!dateWrapper?.contains(e.target) && !calendarPopup.contains(e.target)) {
+                calendarPopup.classList.add('hidden');
+            }
+        });
+        
+        timeSelect.addEventListener('change', validateForm);
+        timeSelect.addEventListener('focus', updateTimeOptions);
+        timeSelect.addEventListener('mousedown', updateTimeOptions);
+        timeSelect.addEventListener('click', updateTimeOptions);
+    }
     
-    // Set max time to current time + 48 hours (for 1hr increments)
-    const now = new Date();
-    const maxTime = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-    timeInput.max = maxTime.toISOString().slice(0, 16);
-    timeInput.min = now.toISOString().slice(0, 16);
+    initializeDateTimePickers();
     
     // Form validation function
     function validateForm() {
         const from = fromSelect.value;
         const to = toSelect.value;
-        const time = timeInput.value;
+        const date = dateSelect.value;
+        const time = timeSelect.value;
         
-        // validate time, when provided (within 48hrs)
-        let timeValid = true;
-        if (time) {
-            const currentTime = new Date();
-            const selectedTime = new Date(time + 'Z');
-            const minTime = new Date(currentTime.getTime());
-            const maxTime = new Date(currentTime.getTime() + 48 * 60 * 60 * 1000);
-            timeValid = selectedTime >= minTime && selectedTime <= maxTime;
-        }
+        // If date/time provided, both must be selected
+        const timeValid = (!date && !time) || (date && time);
         
         const isValid = from && to && from !== to && timeValid;
         submitBtn.disabled = !isValid;
@@ -52,7 +195,7 @@ function initializeForm() {
         validateForm();
     });
     
-    timeInput.addEventListener('input', validateForm);
+    timeSelect.addEventListener('change', validateForm);
     
     // Initial validation
     validateForm();
@@ -81,12 +224,12 @@ function initializeForm() {
         // Get form values
         const from = fromSelect.value;
         const to = toSelect.value;
-        const timeLocal = timeInput.value;
+        const date = dateSelect.value;
+        const time = timeSelect.value;
         
-        // Convert datetime-local input (treated as UTC per label) to ISO-8601 UTC
-        // Append 'Z' to indicate UTC, since the form label says "Time (UTC)"
+        // Convert date and time to ISO-8601 UTC
         // If empty, send null (current obs only)
-        const forecastTime = timeLocal ? new Date(timeLocal + 'Z').toISOString() : null;
+        const forecastTime = (date && time) ? new Date(`${date}T${time}:00Z`).toISOString() : null;
         
         // Prepare request
         const request = {
