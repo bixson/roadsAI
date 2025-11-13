@@ -23,11 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /// Fetches observations and CAP alerts, generates AI advice based on current conditions
 @RestController
@@ -93,23 +91,18 @@ public class ObservationsController {
             
             // Parse forecast time if provided - for prompt filtering
             Instant forecastTime = null;
-            List<ForecastPoint> forecasts = new ArrayList<>();
+            List<ForecastPoint> forecasts = List.of();
             if (request.forecastTime() != null && !request.forecastTime().isBlank()) {
                 try {
-                    Instant parsedTime = Instant.parse(request.forecastTime());
-                    forecastTime = parsedTime;
-                    // Fetch forecasts for station coordinates
-                    List<ForecastPoint> allForecasts = yrNoProvider.fetchForecastForStations(corridor);
-                    // Filter forecasts to requested time window
+                    final Instant parsedForecastTime = Instant.parse(request.forecastTime());
+                    forecastTime = parsedForecastTime;
                     Instant now = Instant.now();
-                    final Instant finalForecastTime = forecastTime;
-                    forecasts = allForecasts.stream()
+                    forecasts = yrNoProvider.fetchForecastForStations(corridor).stream()
                             .filter(f -> !f.time().isBefore(now) && 
-                                       (f.time().isBefore(finalForecastTime) || f.time().equals(finalForecastTime)))
-                            .collect(Collectors.toList());
+                                       (f.time().isBefore(parsedForecastTime) || f.time().equals(parsedForecastTime)))
+                            .toList();
                 } catch (DateTimeParseException e) {
-                    System.out.println("Invalid forecastTime format: " + request.forecastTime());
-                    // Continue without forecasts
+                    // Invalid forecastTime format - continue without forecasts
                 }
             }
             
@@ -128,8 +121,6 @@ public class ObservationsController {
                 forecasts
             ));
         } catch (Exception e) {
-            System.out.println("Error fetching observations: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

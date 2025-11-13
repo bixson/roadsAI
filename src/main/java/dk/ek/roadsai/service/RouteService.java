@@ -1,6 +1,5 @@
 package dk.ek.roadsai.service;
 
-import dk.ek.roadsai.util.GeoDistance;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,17 +29,11 @@ public class RouteService {
     // returns coordinate list, reversed for route switch (ifj->rvk)
     public List<List<Double>> getCoordinates(String from, String to) {
         if ("IFJ".equals(from) && "RVK".equals(to)) {
-            // Reverse route for IFJ → RVK
             List<List<Double>> reversed = new ArrayList<>(RVK_ISF);
             Collections.reverse(reversed);
             return reversed;
         }
-        // Default: RVK → IFJ
-        return RVK_ISF;
+        return new ArrayList<>(RVK_ISF);
     }
 
-    // Polyline length in meters
-    public double getLengthMeters() {
-        return GeoDistance.polylineLengthM(RVK_ISF);
-    }
 }

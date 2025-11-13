@@ -40,7 +40,6 @@ public class YrNoProvider {
 
             YrNoForecastDto dto = fetchForecast(lat, lon, cacheKey);
             if (dto != null && dto.properties != null && dto.properties.timeseries != null) {
-                int count = 0;
                 for (YrNoForecastDto.TimeStep step : dto.properties.timeseries) {
                     if (step.data != null && step.data.instant != null && step.data.instant.details != null) {
                         Instant time = ZonedDateTime.parse(step.time).toInstant();
@@ -57,12 +56,8 @@ public class YrNoProvider {
                                 details.windSpeed,
                                 precip
                         ));
-                        count++;
                     }
                 }
-                System.out.println("YR.no: Fetched " + count + " forecast points for station " + station.name() + " [" + lon + ", " + lat + "]");
-            } else {
-                System.out.println("YR.no: No forecast data for station " + station.name() + " [" + lon + ", " + lat + "]");
             }
         }
         return forecasts;
@@ -86,17 +81,14 @@ public class YrNoProvider {
                     .block();
 
             if (response == null || response.isBlank()) {
-                System.out.println("YR.no: Empty response for lat=" + lat + ", lon=" + lon);
                 return null;
             }
 
             YrNoForecastDto dto = json.readValue(response, YrNoForecastDto.class);
             cache.put(cacheKey, dto);
             cacheTime.put(cacheKey, Instant.now());
-            System.out.println("YR.no: Successfully fetched forecast for lat=" + lat + ", lon=" + lon);
             return dto;
         } catch (Exception e) {
-            System.out.println("YR.no: Error fetching forecast for lat=" + lat + ", lon=" + lon + ": " + e.getMessage());
             return null;
         }
     }
