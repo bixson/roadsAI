@@ -1,3 +1,6 @@
+// Store forecastTime globally to pass to display functions
+let currentForecastTime = null;
+
 function initializeForm() {
     const form = document.getElementById('adviceForm');
     const dateSelect = document.getElementById('date');
@@ -229,18 +232,18 @@ function initializeForm() {
         
         // Convert date and time to ISO-8601 UTC
         // If empty, send null (current obs only)
-        const forecastTime = (date && time) ? new Date(`${date}T${time}:00Z`).toISOString() : null;
+        currentForecastTime = (date && time) ? new Date(`${date}T${time}:00Z`).toISOString() : null;
         
         // Prepare request
         const request = {
             from,
             to,
-            forecastTime
+            forecastTime: currentForecastTime
         };
         
         try {
             const data = await fetchObservations(request);
-            displayResults(data);
+            displayResults(data, currentForecastTime);
         } catch (err) {
             showError(`Failed to fetch observations: ${err.message}`);
         } finally {
