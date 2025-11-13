@@ -27,7 +27,7 @@ public class StationService {
 
     // return all stations within bufferM meters of route defined by routeLonLat (ordered)
     public List<Station> corridorStations(List<List<Double>> routeLonLat, double bufferM) {
-        var all = Stream.concat(vegagerdin.listStations().stream(), vedur.listStations().stream()).toList(); // merge veg: + imo: stations
+        var all = Stream.concat(vegagerdin.listStations().stream(), vedur.listStations().stream()).toList(); // merge veg + imo stations into one list
         return corridorFilter.filterByBuffer(all, routeLonLat, bufferM); //return correct ordered station-list
     }
 

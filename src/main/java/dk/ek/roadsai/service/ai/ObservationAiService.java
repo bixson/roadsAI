@@ -75,9 +75,9 @@ public class ObservationAiService {
 
     // parses AI response into clean advice points
     private List<String> parseAdvicePoints(String content, int expectedCount) {
-        List<String> lines = Arrays.stream(content.split("\n"))
-                .map(String::trim)
-                .filter(line -> !line.isBlank())
+        List<String> lines = Arrays.stream(content.split("\n")) // split AI response into lines
+                .map(String::trim) // trim whitespace
+                .filter(line -> !line.isBlank()) // remove empty lines
                 .toList();
 
         List<String> cleaned = new ArrayList<>();
@@ -91,7 +91,7 @@ public class ObservationAiService {
 
             // Skip generic phrases
             String lowerLine = line.toLowerCase();
-            boolean isGeneric = genericPhrases.stream().anyMatch(lowerLine::contains);
+            boolean isGeneric = genericPhrases.stream().anyMatch(lowerLine::contains); // check if line contains generic phrases
             if (isGeneric && line.length() < 30) {
                 continue;
             }

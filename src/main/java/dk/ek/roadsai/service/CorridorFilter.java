@@ -29,15 +29,12 @@ public class CorridorFilter {
         }
 
         return stations.stream()
-                // Calculate distance and progress metrics for each station
-                .map(s -> new StationWithMetrics(
-                        s,
+                .map(s -> new StationWithMetrics(s, // calculate distance/progress for each station
                         GeoDistance.pointToPolylineM(s.latitude(), s.longitude(), routeLonLat),
-                        GeoDistance.progressAlongPolylineM(s.latitude(), s.longitude(), routeLonLat)
-                ))
-                .filter(m -> m.distanceM <= bufferMeters) // only stations within buffer
-                .sorted(Comparator.comparingDouble((StationWithMetrics m) -> m.progressM) // 1) sort by progress along route
-                        .thenComparingDouble(m -> m.distanceM)) // 2) then by distance to route
+                        GeoDistance.progressAlongPolylineM(s.latitude(), s.longitude(), routeLonLat)))
+                .filter(m -> m.distanceM <= bufferMeters) // keep only stations within buffer
+                .sorted(Comparator.comparingDouble((StationWithMetrics m) -> m.progressM) // sort by progress along route
+                        .thenComparingDouble(m -> m.distanceM)) // then by distance to route
                 .map(m -> m.station) // extract station objects
                 .collect(Collectors.toList());
     }

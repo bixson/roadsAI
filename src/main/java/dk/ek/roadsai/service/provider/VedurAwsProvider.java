@@ -53,8 +53,8 @@ public class VedurAwsProvider implements StationProvider {
         if (cached != null && cachedTime != null && Duration.between(cachedTime, Instant.now()).compareTo(TTL) < 0) {
             // Accept observations from last 2 hours
             Instant twoHoursAgo = Instant.now().minusSeconds(7200);
-            return VedurAwsDto.map(stationId, cached).stream()
-                    .filter(o -> o.timestamp().isAfter(twoHoursAgo))
+            return VedurAwsDto.map(stationId, cached).stream() // stream cached observations
+                    .filter(o -> o.timestamp().isAfter(twoHoursAgo)) // keep only last 2 hours
                     .toList();
         }
 
@@ -83,8 +83,8 @@ public class VedurAwsProvider implements StationProvider {
 
             // Accept observations from last 2 hours
             Instant twoHoursAgo = Instant.now().minusSeconds(7200);
-            return VedurAwsDto.map(stationId, response).stream()
-                    .filter(o -> o.timestamp().isAfter(twoHoursAgo))
+            return VedurAwsDto.map(stationId, response).stream() // stream fresh observations
+                    .filter(o -> o.timestamp().isAfter(twoHoursAgo)) // keep only last 2 hours
                     .toList();
         } catch (Exception e) {
             return List.of();

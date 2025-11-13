@@ -46,11 +46,11 @@ public class VedurAwsDto {
         final ZoneId Z_REYK = ZoneId.of("Atlantic/Reykjavik");
         final DateTimeFormatter FMT_LOCAL = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        return list.stream()
-                .map(it -> {
+        return list.stream() // stream IMO API observations
+                .map(it -> { // convert each DTO to StationObservation
                     try {
                         LocalDateTime ldt = LocalDateTime.parse(it.time, FMT_LOCAL);
-                        Instant ts = ldt.atZone(Z_REYK).toInstant();
+                        Instant ts = ldt.atZone(Z_REYK).toInstant(); // convert local time to UTC
                         return new StationObservation(
                                 stationId,
                                 ts,
@@ -61,10 +61,10 @@ public class VedurAwsDto {
                                 it.precip // precip (nullable)
                         );
                     } catch (Exception e) {
-                        return null;
+                        return null; // skip malformed observations
                     }
                 })
-                .filter(Objects::nonNull)
+                .filter(Objects::nonNull) // remove nulls from failed conversions
                 .toList();
     }
 }

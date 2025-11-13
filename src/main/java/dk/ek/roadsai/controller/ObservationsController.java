@@ -98,8 +98,8 @@ public class ObservationsController {
                     forecastTime = parsedForecastTime;
                     Instant now = Instant.now();
                     forecasts = yrNoProvider.fetchForecastForStations(corridor).stream()
-                            .filter(f -> !f.time().isBefore(now) && 
-                                       (f.time().isBefore(parsedForecastTime) || f.time().equals(parsedForecastTime)))
+                            .filter(f -> !f.time().isBefore(now) && // future forecasts only
+                                       (f.time().isBefore(parsedForecastTime) || f.time().equals(parsedForecastTime))) // up to requested time
                             .toList();
                 } catch (DateTimeParseException e) {
                     // Invalid forecastTime format - continue without forecasts

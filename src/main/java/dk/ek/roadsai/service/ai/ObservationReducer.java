@@ -36,8 +36,8 @@ public class ObservationReducer {
             Map<String, List<CapAlert>> stationAlerts) {
 
         // Group observations by station ID
-        Map<String, List<StationObservation>> byStation = obs.stream()
-                .collect(Collectors.groupingBy(StationObservation::stationId));
+        Map<String, List<StationObservation>> byStation = obs.stream() // stream all observations
+                .collect(Collectors.groupingBy(StationObservation::stationId)); // group by station ID
 
         Map<String, StationFacts> out = new LinkedHashMap<>();
 
@@ -55,9 +55,9 @@ public class ObservationReducer {
                 facts.minTempC = minValue(stationObs, StationObservation::tempC);
                 facts.minVisM = minValue(stationObs, StationObservation::visibilityM);
                 facts.precipType = stationObs.stream()
-                        .map(StationObservation::precipType)
-                        .filter(Objects::nonNull)
-                        .findFirst()
+                        .map(StationObservation::precipType) // extract precip type
+                        .filter(Objects::nonNull) // skip nulls
+                        .findFirst() // get first non-null value
                         .orElse(null);
             }
 
@@ -70,11 +70,11 @@ public class ObservationReducer {
     }
 
     private Double maxValue(List<StationObservation> obs, java.util.function.Function<StationObservation, Double> extractor) {
-        return obs.stream().map(extractor).filter(Objects::nonNull).max(Double::compare).orElse(null);
+        return obs.stream().map(extractor).filter(Objects::nonNull).max(Double::compare).orElse(null); // find max value
     }
 
     private Double minValue(List<StationObservation> obs, java.util.function.Function<StationObservation, Double> extractor) {
-        return obs.stream().map(extractor).filter(Objects::nonNull).min(Double::compare).orElse(null);
+        return obs.stream().map(extractor).filter(Objects::nonNull).min(Double::compare).orElse(null); // find min value
     }
 }
 
