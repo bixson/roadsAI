@@ -31,7 +31,6 @@ public class YrNoProvider {
     public List<ForecastPoint> fetchForecastForStations(List<Station> stations) {
         List<ForecastPoint> forecasts = new ArrayList<>();
         Instant now = Instant.now();
-        Instant limit = now.plusSeconds(48 * 3600); // Next 48 hours
 
         for (Station station : stations) {
             double lat = station.latitude();
@@ -43,7 +42,8 @@ public class YrNoProvider {
                 for (YrNoForecastDto.TimeStep step : dto.properties.timeseries) {
                     if (step.data != null && step.data.instant != null && step.data.instant.details != null) {
                         Instant time = ZonedDateTime.parse(step.time).toInstant();
-                        if (time.isAfter(limit)) break; // Stop after 48 hours
+                        // Only include future forecasts (yr.no API provides ~10 days)
+                        if (time.isBefore(now)) continue;
                         
                         var details = step.data.instant.details;
                         Double precip = step.data.next1Hours != null && step.data.next1Hours.details != null 
