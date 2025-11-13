@@ -26,24 +26,8 @@ function displaySummary(summaryStats) {
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'summary-message-content';
     
-    if (summaryStats) {
-        const contentItems = [];
-        
-        if (summaryStats.stationsUsed !== undefined) {
-            contentItems.push(`Stations Used: ${summaryStats.stationsUsed}`);
-        }
-        
-        if (summaryStats.window) {
-            const fromTime = new Date(summaryStats.window.from).toLocaleString();
-            const toTime = new Date(summaryStats.window.to).toLocaleString();
-            contentItems.push(`Time Window: ${fromTime} - ${toTime}`);
-        }
-        
-        if (contentItems.length > 0) {
-            contentWrapper.innerHTML = contentItems.join('<br><br>');
-        } else {
-            contentWrapper.textContent = 'No summary data available';
-        }
+    if (summaryStats && summaryStats.stationsUsed !== undefined) {
+        contentWrapper.textContent = `Stations Used: ${summaryStats.stationsUsed}`;
     } else {
         contentWrapper.textContent = 'No summary data available';
     }
