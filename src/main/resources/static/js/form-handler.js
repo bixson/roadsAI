@@ -5,19 +5,29 @@ function initializeForm() {
     const fromSelect = document.getElementById('from');
     const toSelect = document.getElementById('to');
     
-    // Set default time to current UTC time
-    // toISOString() already returns UTC, so we can use it directly
+    // Set max time to current time + 48 hours (for 1hr increments)
     const now = new Date();
-    timeInput.value = now.toISOString().slice(0, 16);
+    const maxTime = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    timeInput.max = maxTime.toISOString().slice(0, 16);
+    timeInput.min = now.toISOString().slice(0, 16);
     
     // Form validation function
     function validateForm() {
         const from = fromSelect.value;
         const to = toSelect.value;
-        const mode = document.querySelector('input[name="mode"]:checked');
         const time = timeInput.value;
         
-        const isValid = from && to && mode && time && from !== to;
+        // Time is optional, but if provided must be valid
+        let timeValid = true;
+        if (time) {
+            const currentTime = new Date();
+            const selectedTime = new Date(time + 'Z');
+            const minTime = new Date(currentTime.getTime());
+            const maxTime = new Date(currentTime.getTime() + 48 * 60 * 60 * 1000);
+            timeValid = selectedTime >= minTime && selectedTime <= maxTime;
+        }
+        
+        const isValid = from && to && from !== to && timeValid;
         submitBtn.disabled = !isValid;
     }
     
@@ -43,11 +53,6 @@ function initializeForm() {
     });
     
     timeInput.addEventListener('input', validateForm);
-    
-    // Validate on radio button change
-    document.querySelectorAll('input[name="mode"]').forEach(radio => {
-        radio.addEventListener('change', validateForm);
-    });
     
     // Initial validation
     validateForm();
@@ -76,19 +81,18 @@ function initializeForm() {
         // Get form values
         const from = fromSelect.value;
         const to = toSelect.value;
-        const mode = document.querySelector('input[name="mode"]:checked').value;
         const timeLocal = timeInput.value;
         
         // Convert datetime-local input (treated as UTC per label) to ISO-8601 UTC
         // Append 'Z' to indicate UTC, since the form label says "Time (UTC)"
-        const timeIso = timeLocal ? new Date(timeLocal + 'Z').toISOString() : null;
+        // If empty, send null (current obs only)
+        const forecastTime = timeLocal ? new Date(timeLocal + 'Z').toISOString() : null;
         
         // Prepare request
         const request = {
             from,
             to,
-            mode,
-            timeIso
+            forecastTime
         };
         
         try {
