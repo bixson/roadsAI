@@ -1,53 +1,69 @@
-function displayAdvice(adviceArray) {
+function cleanStationName(name) {
+    if (!name) return name;
+
+    // (e.g., "STEHE (Steingrímsfjarðarheiði)" → "Steingrímsfjarðarheiði")
+    const parenMatch = name.match(/\(([^)]+)\)/);
+    if (parenMatch) {
+        return parenMatch[1].trim();
+    }
+
+    // Remove common prefixes (e.g., "vedur.is ", "veg:", "imo:")
+    let cleaned = name
+        .replace(/^(vedur\.is|veg:|imo:)\s*/i, '')
+        .trim();
+
+    return cleaned;
+}
+
+function displayAdvice(adviceArray, stations, observationsByStation) {
     const adviceContent = document.getElementById('adviceContent');
     adviceContent.innerHTML = '';
-    
-    const chatContainer = document.createElement('div');
-    chatContainer.className = 'advice-chat';
-    
-    const label = document.createElement('div');
-    label.className = 'advice-chat-label';
-    label.textContent = 'AI chat response:';
-    chatContainer.appendChild(label);
-    
-    // Parse all advice first
-    const parsedStations = [];
-    adviceArray.forEach((adviceText) => {
-        const parsed = parseAdviceText(adviceText);
-        if (parsed.stationName) {
-            parsedStations.push(parsed);
+
+    // Match stations with observations and AI advice
+    const stationData = [];
+    stations.forEach((station, index) => {
+        // Get latest observation for station
+        const stationObs = observationsByStation[station.id] || [];
+        let latestObs = null;
+        if (stationObs.length > 0) {
+            latestObs = stationObs.reduce((latest, current) =>
+                new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest
+            );
         }
+
+        // Get AI advice for station (by index)
+        const adviceText = adviceArray[index] || '';
+        const parsed = parseAdviceText(adviceText);
+
+        stationData.push({
+            stationName: cleanStationName(station.name),
+            stationId: station.id,
+            temperature: latestObs?.tempC != null ? `${latestObs.tempC.toFixed(1)}°C` : 'N/A',
+            wind: latestObs?.windMs != null ? `${latestObs.windMs.toFixed(1)} m/s` : 'N/A',
+            gusts: latestObs?.gustMs != null ? `${latestObs.gustMs.toFixed(1)} m/s` : 'N/A',
+            roadConditions: parsed.roadConditions || 'N/A',
+            officialAlert: parsed.officialAlert
+        });
     });
-    
-    // Skip if no valid stations
-    if (parsedStations.length === 0) {
-        const messageBubble = document.createElement('div');
-        messageBubble.className = 'advice-message';
-        const paragraph = document.createElement('p');
-        paragraph.className = 'advice-paragraph';
-        paragraph.textContent = adviceArray.join(' ');
-        messageBubble.appendChild(paragraph);
-        chatContainer.appendChild(messageBubble);
-        adviceContent.appendChild(chatContainer);
-        return;
-    }
-    
+
+    if (stationData.length === 0) return;
+
     // Create unified table container
     const tableContainer = document.createElement('div');
     tableContainer.className = 'advice-table-container';
-    
+
     // Create table header
     const tableHeader = document.createElement('div');
     tableHeader.className = 'advice-table-header';
-    
+
     const headerCells = [
-        { icon: null, label: 'Station' },
-        { icon: 'images/png/chatprompt/temperature.png', label: 'Temperature' },
-        { icon: 'images/png/chatprompt/wind.png', label: 'Wind' },
-        { icon: 'images/png/chatprompt/gusts.png', label: 'Gusts' },
-        { icon: 'images/png/chatprompt/road-conditions.png', label: 'Road Conditions' }
+        {icon: null, label: 'Station'},
+        {icon: 'images/png/chatprompt/temperature.png', label: 'Temperature'},
+        {icon: 'images/png/chatprompt/wind.png', label: 'Wind'},
+        {icon: 'images/png/chatprompt/gusts.png', label: 'Gusts'},
+        {icon: 'images/png/chatprompt/road-conditions.png', label: 'Road Conditions'}
     ];
-    
+
     headerCells.forEach(cell => {
         const headerCell = document.createElement('div');
         headerCell.className = 'advice-table-header-cell';
@@ -63,51 +79,49 @@ function displayAdvice(adviceArray) {
         headerCell.appendChild(labelSpan);
         tableHeader.appendChild(headerCell);
     });
-    
+
     tableContainer.appendChild(tableHeader);
-    
+
     // Create table rows for each station
-    parsedStations.forEach(parsed => {
+    stationData.forEach(data => {
         const tableRow = document.createElement('div');
         tableRow.className = 'advice-table-row';
-        
+
         // Station name cell
         const stationCell = document.createElement('div');
         stationCell.className = 'advice-table-cell advice-table-cell-station';
         const stationNameSpan = document.createElement('span');
         stationNameSpan.className = 'advice-station-name';
-        stationNameSpan.textContent = parsed.stationName;
+        stationNameSpan.textContent = data.stationName;
         stationCell.appendChild(stationNameSpan);
-        
+
         // Add official alert badge if present
-        if (parsed.officialAlert) {
+        if (data.officialAlert) {
             const alertBadge = document.createElement('span');
             alertBadge.className = 'advice-official-alert';
-            alertBadge.textContent = '⚠️ ' + parsed.officialAlert;
+            alertBadge.textContent = '⚠️ ' + data.officialAlert;
             stationCell.appendChild(alertBadge);
         }
-        
+
         tableRow.appendChild(stationCell);
-        
-        // Data cells
+
         const dataValues = [
-            parsed.temperature || 'N/A',
-            parsed.wind || 'N/A',
-            parsed.gusts || 'N/A',
-            parsed.roadConditions || 'N/A'
+            data.temperature,
+            data.wind,
+            data.gusts,
+            data.roadConditions
         ];
-        
+
         dataValues.forEach(value => {
             const dataCell = document.createElement('div');
             dataCell.className = 'advice-table-cell';
             dataCell.textContent = value;
             tableRow.appendChild(dataCell);
         });
-        
+
         tableContainer.appendChild(tableRow);
     });
-    
-    chatContainer.appendChild(tableContainer);
-    adviceContent.appendChild(chatContainer);
+
+    adviceContent.appendChild(tableContainer);
 }
 

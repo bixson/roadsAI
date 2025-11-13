@@ -21,8 +21,7 @@
     box-sizing: border-box;
 }
 
-.form-group label,
-.form-group-radio > label {
+.form-group label {
     color: var(--text-secondary);
     font-size: 0.75rem;
     font-weight: 500;
@@ -68,138 +67,6 @@
 .form-group select:hover,
 .form-group input:hover {
     border-color: var(--border-hover);
-}
-
-/* Radio Button Group */
-.form-group-radio {
-    display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
-    min-width: 0;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.radio-inputs {
-    display: flex;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: 0.5rem;
-    margin: 0;
-    height: 48px;
-    width: 100%;
-    min-width: 0; /* Prevent grid overflow */
-    box-sizing: border-box;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-.radio-inputs label {
-    margin: 0;
-    padding: 0;
-    flex: 1 1 0; /* Equal width distribution, can shrink */
-    min-width: 0; /* Allow shrinking to prevent overflow */
-    max-width: 100%; /* Prevent overflow */
-    box-sizing: border-box;
-    /* Reset styles from .form-group label that interfere */
-    display: block; /* Override .form-group label's display: flex */
-    height: auto; /* Override fixed height */
-    line-height: normal; /* Override fixed line-height */
-    font-size: inherit; /* Let child elements control font size */
-    font-weight: normal; /* Reset font weight */
-    letter-spacing: normal; /* Reset letter spacing */
-    text-transform: none; /* Reset text transform */
-}
-
-.radio-input {
-    clip: rect(0 0 0 0);
-    -webkit-clip-path: inset(100%);
-    clip-path: inset(100%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
-}
-
-.radio-input:checked + .radio-tile {
-    border-color: var(--accent);
-    border-width: 1px;
-    box-shadow: var(--shadow-md), 0 0 0 2px var(--accent-glow);
-    background-color: var(--bg-elevated);
-}
-
-.radio-input:checked + .radio-tile .radio-icon img {
-    opacity: 1;
-    filter: brightness(0) invert(1);
-}
-
-.radio-input:checked + .radio-tile .radio-label-text {
-    color: var(--accent);
-    font-weight: 500;
-}
-
-.radio-input:focus + .radio-tile {
-    border-color: var(--accent);
-    box-shadow: var(--shadow-md), 0 0 0 4px var(--accent-glow);
-}
-
-.radio-tile {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-    height: 48px;
-    padding: 0 0.75rem;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background-color: var(--bg-tertiary);
-    box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
-    cursor: pointer;
-    position: relative;
-    box-sizing: border-box;
-}
-
-.radio-tile:before {
-    display: none; /* Remove blue circle on selection, already shadow */
-}
-
-.radio-tile:hover {
-    border-color: var(--border-hover);
-    background-color: var(--bg-elevated);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
-}
-
-.radio-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.radio-icon img {
-    width: 1.5rem;
-    height: 1.5rem;
-    opacity: 0.6;
-    transition: all 0.375s ease;
-    filter: brightness(0) invert(1);
-}
-
-.radio-label-text {
-    color: var(--text-secondary);
-    transition: all 0.375s ease;
-    font-size: 0.875rem;
-    font-weight: 400;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
-    flex-shrink: 0;
-    min-width: fit-content;
 }
 
 .btn-submit {
@@ -270,36 +137,11 @@
         grid-column: 1;
         margin-top: 0.25rem;
     }
-    
-    .radio-tile {
-        flex-direction: column;
-        height: auto;
-        min-height: 80px;
-        padding: 0.75rem 0.5rem;
-    }
-    
-    .radio-icon {
-        margin-bottom: 0.25rem;
-    }
-    
-    .radio-icon img {
-        width: 1.5rem;
-        height: 1.5rem;
-    }
-    
-    .radio-inputs {
-        height: auto;
-        flex-wrap: wrap;
-    }
 }
 
 @media (max-width: 1024px) and (min-width: 769px) {
     .form {
         grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .form-group-radio {
-        grid-column: 1 / -1;
     }
 }
 

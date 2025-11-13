@@ -1,5 +1,5 @@
-async function fetchAdvice(request) {
-    const response = await fetch('/api/advice', {
+async function fetchObservations(request) {
+    const response = await fetch('/api/observations', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -13,4 +13,3 @@ async function fetchAdvice(request) {
     
     return await response.json();
 }
-
