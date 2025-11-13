@@ -1,4 +1,4 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.ek.roadsai.dto.yr.YrNoForecastDto;

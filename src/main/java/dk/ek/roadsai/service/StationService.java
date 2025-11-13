@@ -2,6 +2,9 @@ package dk.ek.roadsai.service;
 
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
+import dk.ek.roadsai.service.provider.StationProvider;
+import dk.ek.roadsai.service.provider.VegagerdinProvider;
+import dk.ek.roadsai.service.provider.VedurAwsProvider;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

@@ -2,7 +2,7 @@ package dk.ek.roadsai.model;
 
 import java.time.Instant;
 
-/// Forecast point for route waypoint
+/// Forecast point for route waypoint (for yr.no data)
 public record ForecastPoint(
         Instant time,
         double latitude,

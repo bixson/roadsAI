@@ -1,4 +1,4 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.provider;
 
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
@@ -12,3 +12,4 @@ public interface StationProvider {
 
     List<StationObservation> fetchObservations(String stationId, Instant from, Instant to);
 }
+

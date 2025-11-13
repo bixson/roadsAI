@@ -1,4 +1,4 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.provider;
 
 import dk.ek.roadsai.dto.vedur.is.CapAlert;
 import org.springframework.core.ParameterizedTypeReference;

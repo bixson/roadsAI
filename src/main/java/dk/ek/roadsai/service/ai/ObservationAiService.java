@@ -1,4 +1,4 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.ai;
 
 import dk.ek.roadsai.dto.openai.OpenAiRequest;
 import dk.ek.roadsai.dto.openai.OpenAiResponse;
@@ -16,7 +16,7 @@ import java.util.Map;
 
 
 /// OpenAI API integration for observation-based driving advice.
-// focused on current conditions.
+// sends prompts to OpenAI and parses response into advice points
 @Service
 public class ObservationAiService {
     private final WebClient webClient;

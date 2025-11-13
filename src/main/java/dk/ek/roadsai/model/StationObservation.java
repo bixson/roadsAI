@@ -2,7 +2,7 @@ package dk.ek.roadsai.model;
 
 import java.time.Instant;
 
-/// Station weather observation
+/// Station weather observation (for Vegagerdin & Vedur.is)
 public record StationObservation(
         String stationId,
         Instant timestamp,

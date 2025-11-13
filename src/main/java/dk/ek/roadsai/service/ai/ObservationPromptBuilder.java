@@ -1,4 +1,4 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.ai;
 
 import dk.ek.roadsai.model.ForecastPoint;
 import dk.ek.roadsai.model.Station;
@@ -10,6 +10,7 @@ import java.util.Map;
 
 
 /// Builds prompts for OpenAI to generate driving advice based on current observations + forecasts.
+ // takes ObservationReducer and writes into prompt - both system- + user-prompt -> sends to ObservationAiService
 @Service
 public class ObservationPromptBuilder {
 

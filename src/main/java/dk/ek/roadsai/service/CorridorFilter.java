@@ -9,11 +9,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * Filters and orders stations along route polyline (corridor).
- * Calculates distance and position relationships between stations and route geometry.
- * *** {takes all stations along route and lines them up in correct order from start to end}.
- */
+
+/// Filters and orders stations along route polyline (corridor).
+/// Calculates distance and position relationships between stations and route geometry.
+// {takes all stations along route and lines them up in correct order from start to end}.
 @Service
 public class CorridorFilter {
 

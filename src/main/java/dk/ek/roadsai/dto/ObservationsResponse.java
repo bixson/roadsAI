@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /// Response DTO for observations API
+ // From backend to frontend
 public record ObservationsResponse(
         List<StationObservation> observations,
         Map<String, List<CapAlert>> alerts,

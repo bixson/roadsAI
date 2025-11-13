@@ -1,4 +1,4 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.ai;
 
 import dk.ek.roadsai.dto.vedur.is.CapAlert;
 import dk.ek.roadsai.model.Station;
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 
 /// Reduces raw station observations for AI advice generation.
-// Aggregates worst-case metrics per station segment.
+ // takes waether data, calculates worst conditions per station, send to ObservationPromptBuilder
 @Service
 public class ObservationReducer {
 

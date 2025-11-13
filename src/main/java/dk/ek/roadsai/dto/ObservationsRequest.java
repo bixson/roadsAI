@@ -1,6 +1,7 @@
 package dk.ek.roadsai.dto;
 
 /// Observations request DTO
+ // from frontend to backend
 public record ObservationsRequest(
         String from, // "RVK" | "IFJ"
         String to,   // "IFJ" | "RVK"
