@@ -92,11 +92,11 @@ public class VegagerdinProvider implements StationProvider {
         final ZoneId zone = ZoneId.of("Atlantic/Reykjavik");
         Instant twoHoursAgo = Instant.now().minusSeconds(7200);
 
-        return vedur.stream()
-                .filter(v -> v != null && v.nrVedurstofa != null && v.nrVedurstofa.equals(nrWanted))
-                .map(v -> toObs(stationId, v, zone)) // Convert DTO to model
-                .filter(Objects::nonNull)// Skip malformed observations
-                .filter(o -> o.timestamp().isAfter(twoHoursAgo)) // Accept data from last 2 hours
+        return vedur.stream() // stream all vegagerdin observations
+                .filter(v -> v != null && v.nrVedurstofa != null && v.nrVedurstofa.equals(nrWanted)) // filter by station ID
+                .map(v -> toObs(stationId, v, zone)) // convert DTO to model
+                .filter(Objects::nonNull) // skip malformed observations
+                .filter(o -> o.timestamp().isAfter(twoHoursAgo)) // keep only last 2 hours
                 .collect(Collectors.toList());
     }
 

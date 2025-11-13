@@ -61,29 +61,23 @@ public class ObservationAiService {
                 return generateFallback(expectedCount);
             }
 
-            OpenAiResponse.Choice firstChoice = response.choices.getFirst();
-            if (firstChoice == null || firstChoice.message == null || firstChoice.message.content == null) {
+            String content = response.choices.getFirst().message.content;
+            if (content == null || content.isBlank()) {
                 return generateFallback(expectedCount);
             }
 
-            String content = firstChoice.message.content;
             return parseAdvicePoints(content, expectedCount);
 
         } catch (Exception e) {
-            System.out.println("OpenAI error: " + e.getMessage());
             return generateFallback(expectedCount);
         }
     }
 
     // parses AI response into clean advice points
     private List<String> parseAdvicePoints(String content, int expectedCount) {
-        if (content == null || content.isBlank()) {
-            return generateFallback(expectedCount);
-        }
-
-        List<String> lines = Arrays.stream(content.split("\n"))
-                .map(String::trim)
-                .filter(line -> !line.isBlank())
+        List<String> lines = Arrays.stream(content.split("\n")) // split AI response into lines
+                .map(String::trim) // trim whitespace
+                .filter(line -> !line.isBlank()) // remove empty lines
                 .toList();
 
         List<String> cleaned = new ArrayList<>();
@@ -97,7 +91,7 @@ public class ObservationAiService {
 
             // Skip generic phrases
             String lowerLine = line.toLowerCase();
-            boolean isGeneric = genericPhrases.stream().anyMatch(lowerLine::contains);
+            boolean isGeneric = genericPhrases.stream().anyMatch(lowerLine::contains); // check if line contains generic phrases
             if (isGeneric && line.length() < 30) {
                 continue;
             }

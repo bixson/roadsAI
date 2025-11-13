@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 /// Builds prompts for OpenAI to generate driving advice based on current observations + forecasts.
@@ -48,8 +49,8 @@ public class ObservationPromptBuilder {
                 .append(" advice points, one per station segment.\n\n");
 
         // Add official alerts section - PRIORITIZED FIRST
-        boolean hasAlerts = stations.values().stream()
-                .anyMatch(f -> f.alerts != null && !f.alerts.isEmpty());
+        boolean hasAlerts = stations.values().stream() // stream all station facts
+                .anyMatch(f -> f.alerts != null && !f.alerts.isEmpty()); // check if any station has alerts
 
         if (hasAlerts) {
             prompt.append("**⚠️ CRITICAL: OFFICIAL CAP ALERTS - PRIORITIZE THESE IN YOUR ADVICE ⚠️**\n");
@@ -121,34 +122,22 @@ public class ObservationPromptBuilder {
         }
 
         // Add forecast data if available
-        if (forecastTime != null && forecasts != null && !forecasts.isEmpty() && stationList != null) {
+        if (forecastTime != null && forecasts != null && !forecasts.isEmpty()) {
             prompt.append("\n**FORECAST DATA** (up to requested time)\n");
             
             // Match forecasts to stations by coordinates
             for (Station station : stationList) {
-                List<ForecastPoint> stationForecasts = forecasts.stream()
-                        .filter(f -> Math.abs(f.latitude() - station.latitude()) < 0.001 &&
+                List<ForecastPoint> stationForecasts = forecasts.stream() // stream all forecasts
+                        .filter(f -> Math.abs(f.latitude() - station.latitude()) < 0.001 && // match by coordinates
                                    Math.abs(f.longitude() - station.longitude()) < 0.001 &&
-                                   (f.time().isBefore(forecastTime) || f.time().equals(forecastTime)))
+                                   (f.time().isBefore(forecastTime) || f.time().equals(forecastTime))) // up to requested time
                         .toList();
                 
                 if (!stationForecasts.isEmpty()) {
                     // Find worst-case forecast values
-                    Double maxWind = stationForecasts.stream()
-                            .map(ForecastPoint::windMs)
-                            .filter(java.util.Objects::nonNull)
-                            .max(Double::compare)
-                            .orElse(null);
-                    Double minTemp = stationForecasts.stream()
-                            .map(ForecastPoint::tempC)
-                            .filter(java.util.Objects::nonNull)
-                            .min(Double::compare)
-                            .orElse(null);
-                    Double maxPrecip = stationForecasts.stream()
-                            .map(ForecastPoint::precipMm)
-                            .filter(java.util.Objects::nonNull)
-                            .max(Double::compare)
-                            .orElse(null);
+                    Double maxWind = stationForecasts.stream().map(ForecastPoint::windMs).filter(Objects::nonNull).max(Double::compare).orElse(null); // worst-case wind
+                    Double minTemp = stationForecasts.stream().map(ForecastPoint::tempC).filter(Objects::nonNull).min(Double::compare).orElse(null); // worst-case temp
+                    Double maxPrecip = stationForecasts.stream().map(ForecastPoint::precipMm).filter(Objects::nonNull).max(Double::compare).orElse(null); // worst-case precip
                     
                     prompt.append("- ").append(station.name()).append(" forecast: ");
                     boolean hasFc = false;
