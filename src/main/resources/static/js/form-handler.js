@@ -92,10 +92,10 @@ function initializeForm() {
         };
         
         try {
-            const data = await fetchAdvice(request);
+            const data = await fetchObservations(request);
             displayResults(data);
         } catch (err) {
-            showError(`Failed to fetch advice: ${err.message}`);
+            showError(`Failed to fetch observations: ${err.message}`);
         } finally {
             loading.classList.add('hidden');
             validateForm(); // Re-enable button if form is still valid
