@@ -60,7 +60,8 @@ function displayHazards(hazards) {
             hazardsContent.classList.add('has-warnings');
             const contentWrapper = document.createElement('div');
             contentWrapper.className = 'hazards-message-content';
-            contentWrapper.textContent = hazards.slice(1).join(' ');
+            // Join alerts with line breaks for better readability
+            contentWrapper.innerHTML = hazards.slice(1).join('<br><br>');
             message.appendChild(contentWrapper);
         } else {
             const contentWrapper = document.createElement('div');
