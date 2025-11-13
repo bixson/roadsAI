@@ -1,6 +1,6 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.provider;
 
-import dk.ek.roadsai.dto.CapAlert;
+import dk.ek.roadsai.dto.vedur.is.CapAlert;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -11,10 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Veður.is CAP (Common Alerting Protocol) alerts provider
- * 30 min caching to reduce load on API
- */
+/// Veður.is CAP (Common Alerting Protocol) alerts provider
+// 30 min caching to reduce load on API
 @Service
 public class VedurCapProvider {
     private final WebClient http = WebClient.builder()
@@ -29,7 +27,8 @@ public class VedurCapProvider {
 
     /**
      * Fetch CAP alerts for a station location
-     * @param latitude Station latitude
+     *
+     * @param latitude  Station latitude
      * @param longitude Station longitude
      * @return List of active CAP alerts
      */
@@ -50,7 +49,8 @@ public class VedurCapProvider {
                             .path("/cap/v1/lat/{lat}/long/{lon}/srid/4326/distance/30/")
                             .build(latitude, longitude))
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<CapAlert>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<List<CapAlert>>() {
+                    })
                     .block();
 
             if (alerts == null) {

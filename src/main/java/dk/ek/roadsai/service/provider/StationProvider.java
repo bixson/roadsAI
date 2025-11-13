@@ -1,4 +1,4 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.provider;
 
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
@@ -6,11 +6,10 @@ import dk.ek.roadsai.model.StationObservation;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * interface for station data providers
- */
+/// interface for station data providers
 public interface StationProvider {
     List<Station> listStations();
 
     List<StationObservation> fetchObservations(String stationId, Instant from, Instant to);
 }
+

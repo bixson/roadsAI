@@ -6,9 +6,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.List;
 
-///  Vegargerðin returns JSON/XML in API
+/// Vegagerðin returns JSON array in API
 /// wraps @VegagerdinItemDto into an array
-@SuppressWarnings("unused") // Fields are used via Jackson deserialization
 public class VegagerdinArrayDto {
 
     @JsonProperty("Vedur")

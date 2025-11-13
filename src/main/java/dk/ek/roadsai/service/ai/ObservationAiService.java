@@ -1,7 +1,7 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.ai;
 
-import dk.ek.roadsai.dto.OpenAiRequest;
-import dk.ek.roadsai.dto.OpenAiResponse;
+import dk.ek.roadsai.dto.openai.OpenAiRequest;
+import dk.ek.roadsai.dto.openai.OpenAiResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,13 +14,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-/**
- * OpenAI API integration
- * sends weather and road data to OpenAI and retrieves driving advice
- *
- */
+
+/// OpenAI API integration for observation-based driving advice.
+// sends prompts to OpenAI and parses response into advice points
 @Service
-public class OpenAiService {
+public class ObservationAiService {
     private final WebClient webClient;
 
     @Value("${openai.api.key}")
@@ -32,18 +30,17 @@ public class OpenAiService {
     @Value("${openai.api.timeout:30000}")
     private int timeout;
 
-    // initialize WebClient w. OpenAI base URL and headers
-    public OpenAiService() {
+    public ObservationAiService() {
         this.webClient = WebClient.builder()
                 .baseUrl("https://api.openai.com/v1")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
 
-    // Sends system and user prompts to OpenAI, returns exactly 9 advice points(stations on-route)
-    // Returns fallback messages on API errors or timeouts
-    public List<String> ask(String systemPrompt, String userPrompt) {
-        try { // Build request with system and user prompts
+    // asks OpenAI for driving advice based on prompts
+    // returns list of advice points, or fallback messages on error
+    public List<String> ask(String systemPrompt, String userPrompt, int expectedCount) {
+        try {
             OpenAiRequest request = new OpenAiRequest();
             request.model = model;
             request.messages = List.of(
@@ -51,53 +48,49 @@ public class OpenAiService {
                     Map.of("role", "user", "content", userPrompt)
             );
 
-            // Call OpenAI API with configured timeout
             OpenAiResponse response = webClient.post()
-                    .uri("/chat/completions") // Chat completions endpoint
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey) // Add auth header
+                    .uri("/chat/completions")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(OpenAiResponse.class) // Deserialize response
+                    .bodyToMono(OpenAiResponse.class)
                     .timeout(Duration.ofMillis(timeout))
-                    .block(); // close stream
+                    .block();
 
             if (response == null || response.choices == null || response.choices.isEmpty()) {
-                return List.of("No response from AI", "Try again later", "Service unavailable", "AI service error", "Please retry", "Connection issue", "Response empty", "API error", "Retry request");
+                return generateFallback(expectedCount);
             }
 
             OpenAiResponse.Choice firstChoice = response.choices.getFirst();
             if (firstChoice == null || firstChoice.message == null || firstChoice.message.content == null) {
-                return List.of("Invalid response format", "Missing message content", "Try again", "Response format error", "Please retry", "Invalid API response", "No content available", "Response error", "Retry request");
+                return generateFallback(expectedCount);
             }
 
-            String content = firstChoice.message.content; // Extract content from first choice
-            return parseAdvicePoints(content); // return after parsing method
+            String content = firstChoice.message.content;
+            return parseAdvicePoints(content, expectedCount);
 
         } catch (Exception e) {
             System.out.println("OpenAI error: " + e.getMessage());
-            return List.of("AI service unavailable", "Network error", "API timeout", "Try again", "Service error", "Connection failed", "Please retry", "Request failed", "Service down");
+            return generateFallback(expectedCount);
         }
     }
 
-    // Strips numbering, bullets, and formatting characters
-    // Pads with specific advice if fewer than 9 points returned
-    private List<String> parseAdvicePoints(String content) {
+    // parses AI response into clean advice points
+    private List<String> parseAdvicePoints(String content, int expectedCount) {
         if (content == null || content.isBlank()) {
-            return List.of("Empty response", "No advice available", "Try again", "Error parsing", "Invalid response", "Please retry", "No data", "Response empty", "Retry request");
+            return generateFallback(expectedCount);
         }
 
-        // Split into lines and filter out blank entries
         List<String> lines = Arrays.stream(content.split("\n"))
                 .map(String::trim)
                 .filter(line -> !line.isBlank())
                 .toList();
 
         List<String> cleaned = new ArrayList<>();
-        // Phrases to filter out (generic, unhelpful)
         List<String> genericPhrases = List.of("drive carefully", "be careful", "stay safe", "take care");
-        
+
         for (String line : lines) {
-            // Remove common GPT list formatting: "1. ", "- ", "• ", etc.
+            // Remove common formatting
             line = line.replaceFirst("^\\d+[.)]\\s*", "");
             line = line.replaceFirst("^[-*•]\\s*", "");
             line = line.replaceFirst("^[-\\s]+", "");
@@ -106,29 +99,36 @@ public class OpenAiService {
             String lowerLine = line.toLowerCase();
             boolean isGeneric = genericPhrases.stream().anyMatch(lowerLine::contains);
             if (isGeneric && line.length() < 30) {
-                continue; // Skip short generic phrases
+                continue;
             }
 
-            // Keep only meaningful content (length > 10)
             if (!line.isBlank() && line.length() > 10) {
                 cleaned.add(line);
             }
         }
-        
-        // Return error messages if parsing failed
+
         if (cleaned.isEmpty()) {
-            return List.of("Could not parse response", "Invalid format", "Try again", "Parse error", "Response format issue", "Please retry", "No valid advice", "Parse failed", "Retry request");
+            return generateFallback(expectedCount);
         }
-        
-        // Trim to 9 points
-        if (cleaned.size() >= 9) {
-            return cleaned.subList(0, 9);
+
+        // Trim to expected count
+        if (cleaned.size() >= expectedCount) {
+            return cleaned.subList(0, expectedCount);
         }
-        
-        // If fewer than 9 points, pad with specific advice
-        while (cleaned.size() < 9) {
+
+        // Pad if needed
+        while (cleaned.size() < expectedCount) {
             cleaned.add("Monitor weather conditions along the route and adjust speed accordingly");
         }
         return cleaned;
     }
+
+    private List<String> generateFallback(int count) {
+        List<String> fallback = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            fallback.add("AI service unavailable - please review weather observations manually");
+        }
+        return fallback;
+    }
 }
+

@@ -1,4 +1,4 @@
-package dk.ek.roadsai.service;
+package dk.ek.roadsai.service.provider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -15,10 +15,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-/**
- * Vegagerðin road weather station data provider
- * 15 min caching to reduce load on API
- */
+/// Vegagerðin road weather station data provider
+// 15 min caching to reduce load on API
 @Service
 public class VegagerdinProvider implements StationProvider {
 
@@ -46,6 +44,7 @@ public class VegagerdinProvider implements StationProvider {
         lastFetchAt = Instant.now();
         return xmlStr;
     }
+
     // format used in Vegagerdin XML timestamps
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("d.M.yyyy HH:mm:ss");
     //fixed for RVK↔IFJ
@@ -82,17 +81,17 @@ public class VegagerdinProvider implements StationProvider {
         // 2) Parse JSON array directly into DTOs
         List<VegagerdinItemDto> vedur;
         try {
-            vedur = json.readValue(xmlStr, new TypeReference<>() {});
+            vedur = json.readValue(xmlStr, new TypeReference<>() {
+            });
         } catch (Exception e) {
             return List.of(); // JSON parsing failed
         }
 
         // 3) Filter for requested station
-        // Note: 'from' and 'to' parameters are ignored - API only provides recent data (last 2 hours)
         // Accept observations from last 2 hours
         final ZoneId zone = ZoneId.of("Atlantic/Reykjavik");
         Instant twoHoursAgo = Instant.now().minusSeconds(7200);
-        
+
         return vedur.stream()
                 .filter(v -> v != null && v.nrVedurstofa != null && v.nrVedurstofa.equals(nrWanted))
                 .map(v -> toObs(stationId, v, zone)) // Convert DTO to model

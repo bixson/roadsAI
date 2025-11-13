@@ -7,10 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * hardcoded route Reykjavík ↔ Ísafjörður
- */
 
+/// hardcoded route Reykjavík ↔ Ísafjörður
 @Service
 public class RouteService {
 

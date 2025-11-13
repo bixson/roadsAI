@@ -2,6 +2,9 @@ package dk.ek.roadsai.service;
 
 import dk.ek.roadsai.model.Station;
 import dk.ek.roadsai.model.StationObservation;
+import dk.ek.roadsai.service.provider.StationProvider;
+import dk.ek.roadsai.service.provider.VegagerdinProvider;
+import dk.ek.roadsai.service.provider.VedurAwsProvider;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -9,9 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * combined station service for Vegagerðin and vedur.is(IMO)
- */
+/// combined station service for Vegagerðin and vedur.is(IMO)
 @Service
 public class StationService {
     private final StationProvider vegagerdin;

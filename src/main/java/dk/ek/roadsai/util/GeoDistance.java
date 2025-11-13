@@ -4,10 +4,9 @@ package dk.ek.roadsai.util;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Geodesic distance calculations for route analysis and station filtering
- * Uses Haversine formula for great-circle distances and equirectangular projection for segment operations.
- */
+
+/// Geodesic distance calculations for route analysis and station filtering
+// Uses Haversine formula for great-circle distances and equirectangular projection for segment operations.
 public final class GeoDistance {
 
     private GeoDistance() {

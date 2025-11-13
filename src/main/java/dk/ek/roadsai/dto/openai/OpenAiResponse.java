@@ -1,13 +1,11 @@
-package dk.ek.roadsai.dto;
+package dk.ek.roadsai.dto.openai;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
-/**
- * OpenAI API response DTO
- */
+///  openAI response format
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OpenAiResponse {
     @JsonProperty("choices")

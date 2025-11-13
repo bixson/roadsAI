@@ -1,11 +1,10 @@
-package dk.ek.roadsai.dto;
+package dk.ek.roadsai.dto.vedur.is;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Official CAP (Common Alerting Protocol) alert from Veður.is
- */
+
+/// Official CAP (Common Alerting Protocol) alert from Veður.is
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CapAlert {
     @JsonProperty("severity")
