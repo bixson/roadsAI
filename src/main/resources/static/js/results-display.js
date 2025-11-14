@@ -2,7 +2,7 @@ function displayResults(data, forecastTime) {
     // Convert alerts Map to array format for hazards display
     const alertsArray = [];
     if (data.alerts && Object.keys(data.alerts).length > 0) {
-        alertsArray.push('Official Weather Warnings (Icelandic Road Safety Office)');
+        alertsArray.push('Official Weather Warnings (ICELANDIC METEOROLOGICAL OFFICE)');
         Object.entries(data.alerts).forEach(([stationId, alerts]) => {
             alerts.forEach(alert => {
                 let alertText = '';
@@ -55,7 +55,7 @@ function displayResults(data, forecastTime) {
     
     // Display advice with observation data and forecastTime for badge
     if (data.advice && data.advice.length > 0) {
-        displayAdvice(data.advice, data.stations || [], observationsByStation, forecastTime);
+        displayAdvice(data.advice, data.stations || [], observationsByStation, forecastTime, data.alerts);
     }
     
     // Show results section

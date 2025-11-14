@@ -15,12 +15,12 @@ function cleanStationName(name) {
     return cleaned;
 }
 
-function displayAdvice(adviceArray, stations, observationsByStation, forecastTime) {
+function displayAdvice(adviceArray, stations, observationsByStation, forecastTime, alerts) {
     const adviceContent = document.getElementById('adviceContent');
     adviceContent.innerHTML = '';
 
-    // Determine if we're in forecast mode
-    const isForecast = forecastTime !== null;
+    // 'future' forecast vs current observation
+    const isForecast = forecastTime !== null && new Date(forecastTime) > new Date();
 
     // Match stations with observations and AI advice
     const stationData = [];
@@ -45,7 +45,9 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
             wind: latestObs?.windMs != null ? `${latestObs.windMs.toFixed(1)} m/s` : 'N/A',
             gusts: latestObs?.gustMs != null ? `${latestObs.gustMs.toFixed(1)} m/s` : 'N/A',
             roadConditions: parsed.roadConditions || 'N/A',
-            officialAlert: parsed.officialAlert
+            officialAlert: parsed.officialAlert,
+            latestObs: latestObs,
+            stationAlerts: alerts?.[station.id] || []
         });
     });
 
@@ -107,7 +109,18 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
         stationNameSpan.textContent = data.stationName;
         stationCell.appendChild(stationNameSpan);
 
-        // Add official alert badge if present
+        // Add warning badge inline next to station name
+        const hasCap = data.stationAlerts.length > 0;
+        const obs = data.latestObs;
+        const isCautious = obs && (obs.windMs > 15 || obs.gustMs > 20 || (obs.visibilityM && obs.visibilityM < 1000) || (obs.tempC && obs.tempC < -10));
+        if (hasCap || isCautious) {
+            const warningBadge = document.createElement('span');
+            warningBadge.className = hasCap ? 'data-badge warning' : 'data-badge caution';
+            warningBadge.textContent = hasCap ? 'WARNING' : 'CAUTION';
+            stationCell.appendChild(warningBadge);
+        }
+
+        // official alert badge, if present
         if (data.officialAlert) {
             const alertBadge = document.createElement('span');
             alertBadge.className = 'advice-official-alert';

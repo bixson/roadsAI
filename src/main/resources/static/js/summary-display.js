@@ -50,7 +50,7 @@ function displaySummary(summaryStats) {
     const externalLinks = [
         { url: 'https://vedur.is/', display: 'vedur.is' },
         { url: 'https://umferdin.is/', display: 'umferdin.is' },
-        { url: 'https://www.safetravel.is/', display: 'safetravel.is' },
+        { url: 'https://www.yr.no/', display: 'yr.no' },
         { url: 'https://spakort.vedur.is/kort/spakort/', display: 'spakort.vedur.is' },
         { url: 'https://belgingur.is/', display: 'belgingur.is' },
         { url: 'https://www.windy.com/?64.996,-19.378,7,p:temp', display: 'windy.com' }

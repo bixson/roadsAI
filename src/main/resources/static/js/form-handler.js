@@ -85,7 +85,11 @@ function initializeForm() {
                         });
                         dateInput.value = formattedDate;
                         calendarPopup.classList.add('hidden');
-                        updateTimeOptions();
+                        const firstTime = updateTimeOptions();
+                        // auto-select first available time as fallback
+                        if (firstTime) {
+                            timeSelect.value = firstTime;
+                        }
                         validateForm();
                     };
                 }
@@ -99,7 +103,7 @@ function initializeForm() {
             const selectedDate = dateSelect.value;
             timeSelect.innerHTML = '<option value="">Time</option>';
             
-            if (!selectedDate) return;
+            if (!selectedDate) return null;
             
             const now = new Date();
             const maxTime = new Date(now.getTime() + MAX_TIME_MS);
@@ -128,6 +132,8 @@ function initializeForm() {
                 }
             }
             
+            let firstAvailableTime = null;
+            
             // Generate time options (15-minute intervals)
             for (let hour = startHour; hour < 24; hour++) {
                 const startMinForHour = (hour === startHour) ? startMinute : 0;
@@ -139,8 +145,15 @@ function initializeForm() {
                     if (timeDate > maxTime) break;
                     
                     timeSelect.innerHTML += `<option value="${timeStr}">${timeStr}</option>`;
+                    
+                    // Store first available time
+                    if (firstAvailableTime === null) {
+                        firstAvailableTime = timeStr;
+                    }
                 }
             }
+            
+            return firstAvailableTime;
         }
         
         dateInput.onclick = () => {

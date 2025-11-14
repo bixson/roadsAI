@@ -76,7 +76,7 @@ function displayHazards(hazards) {
         // Add secondary line
         const secondaryLine = document.createElement('div');
         secondaryLine.className = 'heading-line-secondary';
-        secondaryLine.textContent = '(Icelandic Road Safety Office)';
+        secondaryLine.textContent = '(ICELANDIC METEOROLOGICAL OFFICE)';
         heading.appendChild(secondaryLine);
         
         message.appendChild(heading);
