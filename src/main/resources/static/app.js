@@ -1,4 +1,3 @@
-// Initialize the application
 async function initialize() {
     // Load Leaflet before initializing
     if (window.LeafletMap) {
