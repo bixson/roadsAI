@@ -408,6 +408,16 @@
     color: #78350f;
 }
 
+.data-badge.warning {
+    background-color: #ef4444;
+    color: white;
+}
+
+.data-badge.caution {
+    background-color: #fbbf24;
+    color: #78350f;
+}
+
 
 
 @media (max-width: 768px) {

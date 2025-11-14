@@ -15,11 +15,11 @@ function cleanStationName(name) {
     return cleaned;
 }
 
-function displayAdvice(adviceArray, stations, observationsByStation, forecastTime) {
+function displayAdvice(adviceArray, stations, observationsByStation, forecastTime, alerts) {
     const adviceContent = document.getElementById('adviceContent');
     adviceContent.innerHTML = '';
 
-    // Determine if we're in forecast mode
+    // 'future' forecast vs current observation
     const isForecast = forecastTime !== null;
 
     // Match stations with observations and AI advice
@@ -45,7 +45,9 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
             wind: latestObs?.windMs != null ? `${latestObs.windMs.toFixed(1)} m/s` : 'N/A',
             gusts: latestObs?.gustMs != null ? `${latestObs.gustMs.toFixed(1)} m/s` : 'N/A',
             roadConditions: parsed.roadConditions || 'N/A',
-            officialAlert: parsed.officialAlert
+            officialAlert: parsed.officialAlert,
+            latestObs: latestObs,
+            stationAlerts: alerts?.[station.id] || []
         });
     });
 
@@ -113,6 +115,17 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
             alertBadge.className = 'advice-official-alert';
             alertBadge.textContent = '⚠️ ' + data.officialAlert;
             stationCell.appendChild(alertBadge);
+        }
+
+        // Add warning badge for CAP or cautious weather
+        const hasCap = data.stationAlerts.length > 0;
+        const obs = data.latestObs;
+        const isCautious = obs && (obs.windMs > 15 || obs.gustMs > 20 || (obs.visibilityM && obs.visibilityM < 1000) || (obs.tempC && obs.tempC < -10));
+        if (hasCap || isCautious) {
+            const warningBadge = document.createElement('span');
+            warningBadge.className = hasCap ? 'data-badge warning' : 'data-badge caution';
+            warningBadge.textContent = hasCap ? 'WARNING' : 'CAUTION';
+            stationCell.appendChild(warningBadge);
         }
 
         tableRow.appendChild(stationCell);
