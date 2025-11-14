@@ -20,7 +20,7 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
     adviceContent.innerHTML = '';
 
     // 'future' forecast vs current observation
-    const isForecast = forecastTime !== null;
+    const isForecast = forecastTime !== null && new Date(forecastTime) > new Date();
 
     // Match stations with observations and AI advice
     const stationData = [];
