@@ -109,15 +109,7 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
         stationNameSpan.textContent = data.stationName;
         stationCell.appendChild(stationNameSpan);
 
-        // Add official alert badge if present
-        if (data.officialAlert) {
-            const alertBadge = document.createElement('span');
-            alertBadge.className = 'advice-official-alert';
-            alertBadge.textContent = '⚠️ ' + data.officialAlert;
-            stationCell.appendChild(alertBadge);
-        }
-
-        // Add warning badge for CAP or cautious weather
+        // Add warning badge inline next to station name
         const hasCap = data.stationAlerts.length > 0;
         const obs = data.latestObs;
         const isCautious = obs && (obs.windMs > 15 || obs.gustMs > 20 || (obs.visibilityM && obs.visibilityM < 1000) || (obs.tempC && obs.tempC < -10));
@@ -126,6 +118,14 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
             warningBadge.className = hasCap ? 'data-badge warning' : 'data-badge caution';
             warningBadge.textContent = hasCap ? 'WARNING' : 'CAUTION';
             stationCell.appendChild(warningBadge);
+        }
+
+        // official alert badge, if present
+        if (data.officialAlert) {
+            const alertBadge = document.createElement('span');
+            alertBadge.className = 'advice-official-alert';
+            alertBadge.textContent = '⚠️ ' + data.officialAlert;
+            stationCell.appendChild(alertBadge);
         }
 
         tableRow.appendChild(stationCell);
