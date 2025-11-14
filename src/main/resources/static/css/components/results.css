@@ -2,6 +2,8 @@
     display: flex;
     flex-direction: column;
     gap: 2.5rem;
+    position: relative;
+    z-index: 1;
 }
 
 .hazards-section,
@@ -12,6 +14,8 @@
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
     backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
 }
 
 .hazards-section h2,
