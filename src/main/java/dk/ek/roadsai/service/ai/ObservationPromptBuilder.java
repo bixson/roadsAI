@@ -67,6 +67,7 @@ public class ObservationPromptBuilder {
         boolean hasAlerts = stations.values().stream() // stream all station facts
                 .anyMatch(f -> f.alerts != null && !f.alerts.isEmpty()); // check if any station has alerts
 
+        //builds alert section, if present (handle multiple per-station with ',')
         if (hasAlerts) {
             prompt.append("**⚠️ CRITICAL: OFFICIAL CAP ALERTS - PRIORITIZE THESE IN YOUR ADVICE ⚠️**\n");
             prompt.append("These are official warnings from Veðurstofa Íslands and must be prominently featured.\n\n");
@@ -74,7 +75,11 @@ public class ObservationPromptBuilder {
                 var facts = entry.getValue();
                 if (facts.alerts != null && !facts.alerts.isEmpty()) {
                     prompt.append("- ").append(facts.stationName).append(": ");
+                    boolean firstAlert = true;
                     for (var alert : facts.alerts) {
+                        if (!firstAlert) {
+                            prompt.append("; ");
+                        }
                         if (alert.headline != null) {
                             prompt.append(alert.headline);
                         }
@@ -84,6 +89,7 @@ public class ObservationPromptBuilder {
                         if (alert.eventType != null) {
                             prompt.append(" (").append(alert.eventType).append(")");
                         }
+                        firstAlert = false;
                     }
                     prompt.append("\n");
                 }
@@ -107,42 +113,24 @@ public class ObservationPromptBuilder {
             var facts = entry.getValue();
             prompt.append("- ").append(facts.stationName).append(": ");
 
-            boolean hasData = false;
+            List<String> parts = new java.util.ArrayList<>();
             if (facts.windMs != null) {
-                prompt.append("Wind ").append(String.format("%.1f", facts.windMs)).append(" m/s");
-                hasData = true;
+                parts.add("Wind " + String.format("%.1f", facts.windMs) + " m/s");
             }
             if (facts.maxGustMs != null) {
-                if (hasData) {
-                    prompt.append(", ");
-                }
-                prompt.append("Gusts ").append(String.format("%.1f", facts.maxGustMs)).append(" m/s");
-                hasData = true;
+                parts.add("Gusts " + String.format("%.1f", facts.maxGustMs) + " m/s");
             }
             if (facts.minTempC != null) {
-                if (hasData) {
-                    prompt.append(", ");
-                }
-                prompt.append("Temp ").append(String.format("%.1f", facts.minTempC)).append("°C");
-                hasData = true;
+                parts.add("Temp " + String.format("%.1f", facts.minTempC) + "°C");
             }
             if (facts.minVisM != null) {
-                if (hasData) {
-                    prompt.append(", ");
-                }
-                prompt.append("Visibility ").append(String.format("%.0f", facts.minVisM)).append("m");
-                hasData = true;
+                parts.add("Visibility " + String.format("%.0f", facts.minVisM) + "m");
             }
             if (facts.precipType != null && !facts.precipType.isBlank()) {
-                if (hasData) {
-                    prompt.append(", ");
-                }
-                prompt.append("Precip: ").append(facts.precipType);
-                hasData = true;
+                parts.add("Precip: " + facts.precipType);
             }
-            if (!hasData) {
-                prompt.append("No recent observations");
-            }
+            
+            prompt.append(parts.isEmpty() ? "No recent observations" : String.join(", ", parts));
             prompt.append("\n");
         }
 
@@ -165,6 +153,7 @@ public class ObservationPromptBuilder {
                     Double minTemp = stationForecasts.stream().map(ForecastPoint::tempC).filter(Objects::nonNull).min(Double::compare).orElse(null); // worst-case temp
                     Double maxPrecip = stationForecasts.stream().map(ForecastPoint::precipMm).filter(Objects::nonNull).max(Double::compare).orElse(null); // worst-case precip
 
+                    // output summary for station
                     prompt.append("- ").append(station.name()).append(" forecast: ");
                     boolean hasForecast = false;
                     if (maxWind != null) {
@@ -198,14 +187,9 @@ public class ObservationPromptBuilder {
         }
         if (forecastTime != null) {
             long hoursAhead = java.time.Duration.between(Instant.now(), forecastTime).toHours();
-            if (hoursAhead > 2) {
-                prompt.append("Provide ").append(stations.size())
-                        .append(" concise advice points (20-25 words each), one per station, focusing on forecast conditions for the requested time (")
-                        .append(hoursAhead).append(" hours ahead). Current observations are context only.");
-            } else {
-                prompt.append("Provide ").append(stations.size())
-                        .append(" concise advice points (20-25 words each), one per station, combining current conditions with forecast trends up to the requested time.");
-            }
+            prompt.append("Provide ").append(stations.size())
+                    .append(" concise advice points (20-25 words each), one per station, combining current conditions with forecast trends up to the requested time (")
+                    .append(hoursAhead).append(" hours ahead).");
         } else {
             prompt.append("Provide ").append(stations.size())
                     .append(" concise advice points (20-25 words each), one per station, focusing on current conditions and specific driving guidance.");

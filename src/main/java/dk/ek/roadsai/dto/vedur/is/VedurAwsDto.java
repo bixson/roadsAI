@@ -49,8 +49,9 @@ public class VedurAwsDto {
         return list.stream() // stream IMO API observations
                 .map(it -> { // convert each DTO to StationObservation
                     try {
+                        // API returns local Iceland time (no timezone) → parse as LocalDateTime → convert to UTC Instant
                         LocalDateTime ldt = LocalDateTime.parse(it.time, FMT_LOCAL);
-                        Instant ts = ldt.atZone(Z_REYK).toInstant(); // convert local time to UTC
+                        Instant ts = ldt.atZone(Z_REYK).toInstant();
                         return new StationObservation(
                                 stationId,
                                 ts,

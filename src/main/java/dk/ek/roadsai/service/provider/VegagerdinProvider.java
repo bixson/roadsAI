@@ -25,28 +25,14 @@ public class VegagerdinProvider implements StationProvider {
     private final ObjectMapper json = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    //caching
-    private static final Duration TTL = Duration.ofMinutes(15); // 15 min
-    private Instant lastFetchAt = Instant.EPOCH; // Tracks when cache was last populated
-    private String lastXml = null; // Cached bulk XML response
+    //caching (15 min TTL)
+    private static final Duration TTL = Duration.ofMinutes(15);
+    private Instant lastFetchAt = Instant.EPOCH;
+    private String lastJson = null;
 
-    // Fetches XML data with simple TTL-based caching
-    private String getXml() {
-        // if lastXml is present and not older than TTL, return it
-        if (lastXml != null && Duration.between(lastFetchAt, Instant.now()).compareTo(TTL) < 0) {
-            return lastXml;
-        }
-        // else fetch fresh XML + update cache
-        String xmlStr = http.get().uri("/api/vedur2014_1")
-                .retrieve().bodyToMono(String.class).block();
-        // Update cache with fresh data
-        lastXml = xmlStr;
-        lastFetchAt = Instant.now();
-        return xmlStr;
-    }
-
-    // format used in Vegagerdin XML timestamps
+    // Vegagerdin JSON timestamps ("4.11.2025 21:50:00")
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("d.M.yyyy HH:mm:ss");
+    private static final ZoneId Z_REYK = ZoneId.of("Atlantic/Reykjavik");
     //fixed for RVK↔IFJ
     private final List<Station> registry = List.of(
             new Station("veg:31674", "HFNFJ (Hafnarfjall)", 64.4755, -21.9603, "VEGAGERDIN"),
@@ -72,31 +58,36 @@ public class VegagerdinProvider implements StationProvider {
             return List.of(); // Invalid station ID format
         }
 
-        // 1) Fetch XML (bulk)
-        final String xmlStr = getXml();
-        if (xmlStr == null || xmlStr.isBlank()) {
+        // 1) Fetch JSON array (bulk) (cache-check)
+        String jsonStr = null;
+        if (lastJson != null && Duration.between(lastFetchAt, Instant.now()).compareTo(TTL) < 0) {
+            jsonStr = lastJson;
+        } else {
+            // Fetch fresh JSON + update cache
+            jsonStr = http.get().uri("/api/vedur2014_1")
+                    .retrieve().bodyToMono(String.class).block();
+            lastJson = jsonStr;
+            lastFetchAt = Instant.now();
+        }
+        
+        if (jsonStr == null || jsonStr.isBlank()) {
             return List.of();
         }
 
         // 2) Parse JSON array directly into DTOs
         List<VegagerdinItemDto> vedur;
         try {
-            vedur = json.readValue(xmlStr, new TypeReference<>() {
-            });
+            vedur = json.readValue(jsonStr, new TypeReference<List<VegagerdinItemDto>>() {});
         } catch (Exception e) {
             return List.of(); // JSON parsing failed
         }
 
-        // 3) Filter for requested station
-        // Accept observations from last 2 hours
-        final ZoneId zone = ZoneId.of("Atlantic/Reykjavik");
-        Instant twoHoursAgo = Instant.now().minusSeconds(7200);
-
+        // 3) Filter for requested station and time window
         return vedur.stream() // stream all vegagerdin observations
                 .filter(v -> v != null && v.nrVedurstofa != null && v.nrVedurstofa.equals(nrWanted)) // filter by station ID
-                .map(v -> toObs(stationId, v, zone)) // convert DTO to model
+                .map(v -> toObs(stationId, v, Z_REYK)) // convert DTO to model
                 .filter(Objects::nonNull) // skip malformed observations
-                .filter(o -> o.timestamp().isAfter(twoHoursAgo)) // keep only last 2 hours
+                .filter(o -> !o.timestamp().isBefore(from) && !o.timestamp().isAfter(to)) // filter by requested time window
                 .collect(Collectors.toList());
     }
 
@@ -104,7 +95,7 @@ public class VegagerdinProvider implements StationProvider {
     private StationObservation toObs(String stationId, VegagerdinItemDto v, ZoneId zone) {
         try {
             var local = LocalDateTime.parse(v.dags, FMT);
-            var ts = local.atZone(zone).toInstant();
+            var ts = local.atZone(zone).toInstant(); // Parse local Iceland time → convert to UTC Instant
             Double wind = v.vindhradi;
             Double gust = v.vindhvida;
             return new StationObservation(

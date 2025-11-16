@@ -58,7 +58,7 @@ public class ObservationsController {
 
     @PostMapping(value = "/observations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ObservationsResponse> getObservations(@RequestBody ObservationsRequest request) {
-        // Validation
+        // Validation (error handling)
         if (request == null || request.from() == null || request.from().isBlank() ||
             request.to() == null || request.to().isBlank() ||
             request.from().equals(request.to())) {
