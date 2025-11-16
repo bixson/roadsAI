@@ -1,13 +1,13 @@
 function cleanStationName(name) {
     if (!name) return name;
 
-    // (e.g., "STEHE (Steingrímsfjarðarheiði)" → "Steingrímsfjarðarheiði")
+    // clean station names for display ("STEHE (Steingrímsfjarðarheiði)" → "Steingrímsfjarðarheiði")
     const parenMatch = name.match(/\(([^)]+)\)/);
     if (parenMatch) {
         return parenMatch[1].trim();
     }
 
-    // Remove common prefixes (e.g., "vedur.is ", "veg:", "imo:")
+    // Remove common prefixes ( "vedur.is ", "veg:", "imo:")
     let cleaned = name
         .replace(/^(vedur\.is|veg:|imo:)\s*/i, '')
         .trim();
@@ -37,7 +37,7 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
         // Get AI advice for station (by index)
         const adviceText = adviceArray[index] || '';
         const parsed = parseAdviceText(adviceText);
-
+        // push combined data for station
         stationData.push({
             stationName: cleanStationName(station.name),
             stationId: station.id,
@@ -109,7 +109,7 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
         stationNameSpan.textContent = data.stationName;
         stationCell.appendChild(stationNameSpan);
 
-        // Add warning badge inline next to station name
+        // Add warning badge inline next to station name, if applicable
         const hasCap = data.stationAlerts.length > 0;
         const obs = data.latestObs;
         const isCautious = obs && (obs.windMs > 15 || obs.gustMs > 20 || (obs.visibilityM && obs.visibilityM < 1000) || (obs.tempC && obs.tempC < -10));

@@ -4,17 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roads Advisor - Iceland Road Safety Forecast</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
+        <!-- Header Section -->
         <header class="header">
             <h1>Road Advisor</h1>
             <p class="subtitle">Icelandic Road Safety Advisor</p>
         </header>
 
+        <!-- Main Content -->
         <main class="main">
+            <!-- Form Section -->
             <form id="adviceForm" class="form">
                 <div class="form-group">
                     <label for="from">From</label>
@@ -49,14 +51,18 @@
                 <button type="submit" class="btn-submit" id="submitBtn" disabled>Get Advice</button>
             </form>
 
+            <!-- Loading Spinner -->
             <div id="loading" class="loading hidden">
                 <div class="spinner"></div>
                 <p>Analyzing weather conditions...</p>
             </div>
 
+            <!-- Error Display -->
             <div id="error" class="error hidden"></div>
 
+            <!-- Results Section -->
             <div id="results" class="results hidden">
+                <!-- Hazards & Summary Section -->
                 <section class="hazards-section">
                     <h2>Weather Warnings</h2>
                     <div class="hazards-container">
@@ -65,6 +71,7 @@
                     </div>
                 </section>
 
+                <!-- Advice & Map Section -->
                 <section class="advice-section">
                     <h2>Route Advice</h2>
                     <div class="advice-map-container">
@@ -76,6 +83,7 @@
         </main>
     </div>
 
+    <!-- JavaScript Modules -->
     <script src="leaflet-map.js" defer></script>
     <script src="js/advice-parser.js" defer></script>
     <script src="js/advice-display.js" defer></script>
