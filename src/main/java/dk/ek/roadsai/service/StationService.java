@@ -43,7 +43,6 @@ public class StationService {
             
             // If first waypoint is further north than last, route is reversed (IFJ → RVK)
             if (firstLat > lastLat) {
-                // Reverse station order for IFJ → RVK route
                 return sorted.reversed();
             }
         }

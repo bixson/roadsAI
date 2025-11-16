@@ -110,7 +110,7 @@ public class ObservationAiService {
             return cleaned.subList(0, expectedCount);
         }
 
-        // Pad if needed
+        // Pad if needed (fill missing points with generic advice)
         while (cleaned.size() < expectedCount) {
             cleaned.add("Monitor weather conditions along the route and adjust speed accordingly");
         }

@@ -1,6 +1,6 @@
 package dk.ek.roadsai.model;
 
-/// Station metadata (for Vegagerdin & Vedur.is)
+/// Station metadata (combined)
 public record Station(
         String id,
         String name,
