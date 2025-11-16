@@ -1,9 +1,4 @@
-async function initialize() {
-    // Load Leaflet before initializing
-    if (window.LeafletMap) {
-        await window.LeafletMap.loadLeaflet();
-    }
-    
+function initialize() {
     // Initialize form handling
     initializeForm();
 }
