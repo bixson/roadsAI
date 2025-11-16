@@ -69,8 +69,8 @@ public class ObservationsController {
             // Get route coordinates
             var routeGeo = routeService.getCoordinates(request.from(), request.to());
             
-            // Get stations along route (5km buffer)
-            List<Station> corridor = stationService.corridorStations(routeGeo, 5000.0);
+            // Get stations for route
+            List<Station> corridor = stationService.corridorStations(routeGeo);
             
             // Fetch latest observations (last 15 min, cache capped for precision)
             Instant fifteenMinutesAgo = Instant.now().minusSeconds(900);
