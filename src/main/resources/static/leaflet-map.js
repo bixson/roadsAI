@@ -10,7 +10,7 @@ function loadLeaflet() {
             resolve();
             return;
         }
-        
+        // Load Leaflet CSS
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
         script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
@@ -21,13 +21,14 @@ function loadLeaflet() {
     });
 }
 
-// Map state for advice section  
+// Map state for (front)advice section
 let adviceMap = null;
 let adviceRouteLayer = null;
 let adviceMapMarkers = [];
 
 /**
  * Get road-following route from OSRM
+ * builds route from waypoints
  */
 async function getRoadRoute(waypoints) {
     // OSRM route service - uses free demo server
@@ -57,7 +58,7 @@ async function getRoadRoute(waypoints) {
 }
 
 /**
- * Get road route with retry logic
+ * Get road route with retry logic (failed on first implementation)
  */
 async function getRoadRouteWithRetry(waypoints, maxRetries = 3) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -167,22 +168,12 @@ async function initializeAdviceMap(mapData) {
                 }).addTo(adviceMap);
             }
             
-            // Add station markers with enhanced styling
+            // Add station markers (default Leaflet markers)
             adviceMapMarkers = [];
             if (mapData.stations && Array.isArray(mapData.stations)) {
-                mapData.stations.forEach((station, index) => {
-                    const marker = L.marker([station.lat, station.lon], {
-                        icon: L.divIcon({
-                            className: 'station-marker',
-                            html: `<div class="station-marker-inner"><span class="station-number">${index + 1}</span></div>`,
-                            iconSize: [24, 24],
-                            iconAnchor: [12, 12]
-                        })
-                    }).addTo(adviceMap);
-                    
-                    // Add popup with station name
+                mapData.stations.forEach((station) => {
+                    const marker = L.marker([station.lat, station.lon]).addTo(adviceMap);
                     marker.bindPopup(`<strong>${station.name}</strong><br>${station.id}`);
-                    
                     adviceMapMarkers.push(marker);
                 });
             }

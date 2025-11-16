@@ -54,8 +54,8 @@ function displayHazards(hazards) {
         }
         
         message.appendChild(heading);
-        
-        // Rest of the array is the actual warnings
+
+        // Add hazards content
         if (hazards.length > 1) {
             hazardsContent.classList.add('has-warnings');
             const contentWrapper = document.createElement('div');

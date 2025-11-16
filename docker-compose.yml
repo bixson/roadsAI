@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  keyra:
+    build: .
+    container_name: keyra-app
+    restart: unless-stopped
+    ports:
+      - "18080:8080"
+    env_file:
+      - .env
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
