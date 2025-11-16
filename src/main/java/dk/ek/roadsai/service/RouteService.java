@@ -22,8 +22,8 @@ public class RouteService {
             List.of(-22.1291, 65.7503), // Steingrímsfjarðarheiði
             List.of(-22.7303, 66.0403), // Ögur
             List.of(-22.9888, 66.0279), // Súðavík
-            List.of(-23.0465, 66.0977),  // Arnarfjörður, Ísafjörður
-            List.of(-23.1239, 66.0746)   // Ísafjörður, N1 bensínstöð
+            List.of(-23.0465, 66.0977), // Arnarfjörður, Ísafjörður
+            List.of(-23.1239, 66.0746)  // Ísafjörður, N1 bensínstöð
     );
 
     // returns coordinate list, reversed for route switch (ifj->rvk)
