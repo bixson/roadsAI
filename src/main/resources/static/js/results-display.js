@@ -35,9 +35,13 @@ function displayResults(data, forecastTime) {
         }))
     };
     
-    // Initialize advice map
+    // Initialize advice map -- performance optimization
     if (window.LeafletMap && mapData.route.coordinates.length > 0) {
-        setTimeout(() => {
+        setTimeout(async () => {
+            // Load Leaflet library only when map is actually needed
+            if (typeof L === 'undefined') {
+                await window.LeafletMap.loadLeaflet();
+            }
             window.LeafletMap.initializeAdviceMap(mapData);
         }, 100);
     }
