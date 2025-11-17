@@ -1,72 +1,44 @@
 function displaySummary(summaryStats) {
     const summaryContent = document.getElementById('summaryContent');
     summaryContent.innerHTML = '';
-    
-    // Create message box
+
+    // Create message container
     const message = document.createElement('div');
     message.className = 'summary-message';
     
-    // subtle heading
+    // create heading
     const heading = document.createElement('div');
     heading.className = 'summary-message-heading';
-    
-    const title = document.createElement('div');
-    title.className = 'summary-title';
-    title.textContent = 'Route Summary';
-    heading.appendChild(title);
-    
-    const subtitle = document.createElement('div');
-    subtitle.className = 'summary-subtitle';
-    subtitle.textContent = 'Weather Data Overview';
-    heading.appendChild(subtitle);
-    
+    heading.innerHTML = `
+        <div class="summary-title">Route Summary</div>
+        <div class="summary-subtitle">Weather Data Overview</div>
+    `;
     message.appendChild(heading);
     
-    // content wrapper
+    // Create content
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'summary-message-content';
-    
-    if (summaryStats && summaryStats.stationsUsed !== undefined) {
-        contentWrapper.textContent = `Stations Used: ${summaryStats.stationsUsed}`;
-    } else {
-        contentWrapper.textContent = 'No summary data available';
-    }
-    
+    contentWrapper.textContent = summaryStats?.stationsUsed !== undefined  // check for undefined
+        ? `Stations Used: ${summaryStats.stationsUsed}`  // display stations used
+        : 'No summary data available'; // if none, fallback msg
     message.appendChild(contentWrapper);
     
-    // external links section
+    // Create external links section
     const linksSection = document.createElement('div');
     linksSection.className = 'summary-links';
-    
-    const linksTitle = document.createElement('div');
-    linksTitle.className = 'summary-links-title';
-    linksTitle.textContent = 'More Detailed Weather Information:';
-    linksSection.appendChild(linksTitle);
-    
-    const linksList = document.createElement('div');
-    linksList.className = 'summary-links-list';
-    
-    // External weather links
-    const externalLinks = [
-        { url: 'https://vedur.is/', display: 'vedur.is' },
-        { url: 'https://umferdin.is/', display: 'umferdin.is' },
-        { url: 'https://www.yr.no/', display: 'yr.no' },
-        { url: 'https://spakort.vedur.is/kort/spakort/', display: 'spakort.vedur.is' },
-        { url: 'https://belgingur.is/', display: 'belgingur.is' },
-        { url: 'https://www.windy.com/?64.996,-19.378,7,p:temp', display: 'windy.com' }
-    ];
-    
-    externalLinks.forEach(link => {
-        const linkElement = document.createElement('a');
-        linkElement.href = link.url;
-        linkElement.textContent = link.display;
-        linkElement.target = '_blank';
-        linkElement.rel = 'noopener noreferrer';
-        linkElement.className = 'summary-link';
-        linksList.appendChild(linkElement);
-    });
-    
-    linksSection.appendChild(linksList);
+    linksSection.innerHTML = `
+        <div class="summary-links-title">More Detailed Weather Information:</div>
+        <div class="summary-links-list">
+            ${[
+                { url: 'https://vedur.is/', display: 'vedur.is' },
+                { url: 'https://umferdin.is/', display: 'umferdin.is' },
+                { url: 'https://www.yr.no/', display: 'yr.no' },
+                { url: 'https://spakort.vedur.is/kort/spakort/', display: 'spakort.vedur.is' },
+                { url: 'https://belgingur.is/', display: 'belgingur.is' },
+                { url: 'https://www.windy.com/?64.996,-19.378,7,p:temp', display: 'windy.com' }
+            ].map(link => `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="summary-link">${link.display}</a>`).join('')}
+        </div>
+    `;
     message.appendChild(linksSection);
     
     summaryContent.appendChild(message);
