@@ -15,7 +15,7 @@ function initializeForm() {
         let selectedDateStr = '';
         // Yr.no API caps at 10 days forecast
         const FORECAST_DAYS = 10;
-        const MAX_TIME_MS = FORECAST_DAYS * 24 * 60 * 60 * 1000;
+        const MAX_TIME_MS = FORECAST_DAYS * 24 * 60 * 60 * 1000; // 10 days in ms
         
         function getTodayUTC() {
             const today = new Date();
@@ -36,7 +36,7 @@ function initializeForm() {
             const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
             const startDate = new Date(firstDayOfMonth);
             const dayOfWeek = firstDayOfMonth.getUTCDay();
-            startDate.setUTCDate(startDate.getUTCDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+            startDate.setUTCDate(startDate.getUTCDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Adjust to Monday
             
             // Build calendar HTML
             const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -98,7 +98,7 @@ function initializeForm() {
                 currentDate.setUTCDate(currentDate.getUTCDate() + 1);
             }
         }
-        
+        // Update time options based on selected date
         function updateTimeOptions() {
             const selectedDate = dateSelect.value;
             timeSelect.innerHTML = '<option value="">Time</option>';
@@ -139,8 +139,8 @@ function initializeForm() {
                 const startMinForHour = (hour === startHour) ? startMinute : 0;
                 
                 for (let minute = startMinForHour; minute < 60; minute += 15) {
-                    const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-                    const timeDate = new Date(`${selectedDate}T${timeStr}:00Z`);
+                    const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`; // HH:MM format
+                    const timeDate = new Date(`${selectedDate}T${timeStr}:00Z`); // UTC time
                     
                     if (timeDate > maxTime) break;
                     
@@ -223,7 +223,7 @@ function initializeForm() {
         // Disable submit button during request
         submitBtn.disabled = true;
         
-        // Hide previous results/errors
+        // Hide results/errors
         const error = document.getElementById('error');
         const results = document.getElementById('results');
         const loading = document.getElementById('loading');
@@ -243,8 +243,7 @@ function initializeForm() {
         const date = dateSelect.value;
         const time = timeSelect.value;
         
-        // Convert date and time to ISO-8601 UTC
-        // If empty, send null (current obs only)
+        // Convert date and time to ISO-8601 UTC (If empty, send null)
         currentForecastTime = (date && time) ? new Date(`${date}T${time}:00Z`).toISOString() : null;
         
         // Prepare request

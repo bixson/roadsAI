@@ -3,90 +3,33 @@ function displayHazards(hazards) {
     hazardsContent.innerHTML = '';
     hazardsContent.classList.remove('has-warnings');
     
-    // Create message box
     const message = document.createElement('div');
     message.className = 'hazards-message';
     
-    // Helper function to create primary line with icons
-    function createPrimaryLine(text) {
-        const primaryLine = document.createElement('div');
-        primaryLine.className = 'heading-line';
-        
-        const icon1 = document.createElement('span');
-        icon1.className = 'warning-icon';
-        icon1.textContent = '⚠️';
-        const primaryTextSpan = document.createElement('span');
-        primaryTextSpan.className = 'heading-line-primary';
-        primaryTextSpan.textContent = text;
-        const icon2 = document.createElement('span');
-        icon2.className = 'warning-icon';
-        icon2.textContent = '⚠️';
-        
-        primaryLine.appendChild(icon1);
-        primaryLine.appendChild(primaryTextSpan);
-        primaryLine.appendChild(icon2);
-        return primaryLine;
-    }
-    
     const heading = document.createElement('div');
     heading.className = 'hazards-message-heading';
+    heading.innerHTML = `
+        <div class="heading-line">
+            <span class="warning-icon">⚠️</span>
+            <span class="heading-line-primary">Official Weather Warnings</span>
+            <span class="warning-icon">⚠️</span>
+        </div>
+        <div class="heading-line-secondary">(ICELANDIC METEOROLOGICAL OFFICE)</div>
+    `;
+    message.appendChild(heading);
+    
+    // Add content
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'hazards-message-content';
     
     if (hazards && hazards.length > 0) {
-
-        const headingText = hazards[0];
-        
-        // Parse heading text - split at "(" if present
-        let primaryText = headingText;
-        let secondaryText = '';
-        const parenIndex = headingText.indexOf('(');
-        if (parenIndex !== -1) {
-            primaryText = headingText.substring(0, parenIndex).trim();
-            secondaryText = headingText.substring(parenIndex).trim();
-        }
-        
-        heading.appendChild(createPrimaryLine(primaryText));
-
-        if (secondaryText) {
-            const secondaryLine = document.createElement('div');
-            secondaryLine.className = 'heading-line-secondary';
-            secondaryLine.textContent = secondaryText;
-            heading.appendChild(secondaryLine);
-        }
-        
-        message.appendChild(heading);
-
-        // Add hazards content
-        if (hazards.length > 1) {
-            hazardsContent.classList.add('has-warnings');
-            const contentWrapper = document.createElement('div');
-            contentWrapper.className = 'hazards-message-content';
-            // Join alerts with line breaks for better readability
-            contentWrapper.innerHTML = hazards.slice(1).join('<br><br>');
-            message.appendChild(contentWrapper);
-        } else {
-            const contentWrapper = document.createElement('div');
-            contentWrapper.className = 'hazards-message-content';
-            contentWrapper.textContent = 'No hazards detected for given route - conditions are within safe limits';
-            message.appendChild(contentWrapper);
-        }
+        hazardsContent.classList.add('has-warnings');
+        contentWrapper.innerHTML = hazards.join('<br><br>');
     } else {
-        // Default heading inside message box
-        heading.appendChild(createPrimaryLine('Official Weather Warnings'));
-        
-        // Add secondary line
-        const secondaryLine = document.createElement('div');
-        secondaryLine.className = 'heading-line-secondary';
-        secondaryLine.textContent = '(ICELANDIC METEOROLOGICAL OFFICE)';
-        heading.appendChild(secondaryLine);
-        
-        message.appendChild(heading);
-        
-        const contentWrapper = document.createElement('div');
-        contentWrapper.className = 'hazards-message-content';
         contentWrapper.textContent = 'No hazards detected for given route - conditions are within safe limits';
-        message.appendChild(contentWrapper);
     }
     
+    message.appendChild(contentWrapper);
     hazardsContent.appendChild(message);
 }
 

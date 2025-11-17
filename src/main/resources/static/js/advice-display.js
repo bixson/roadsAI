@@ -29,7 +29,7 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
         const stationObs = observationsByStation[station.id] || [];
         let latestObs = null;
         if (stationObs.length > 0) {
-            latestObs = stationObs.reduce((latest, current) =>
+            latestObs = stationObs.reduce((latest, current) => // find latest by timestamp
                 new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest
             );
         }
@@ -41,11 +41,10 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
         stationData.push({
             stationName: cleanStationName(station.name),
             stationId: station.id,
-            temperature: latestObs?.tempC != null ? `${latestObs.tempC.toFixed(1)}°C` : 'N/A',
-            wind: latestObs?.windMs != null ? `${latestObs.windMs.toFixed(1)} m/s` : 'N/A',
-            gusts: latestObs?.gustMs != null ? `${latestObs.gustMs.toFixed(1)} m/s` : 'N/A',
+            temperature: latestObs?.tempC != null ? `${latestObs.tempC.toFixed(1)}°C` : 'N/A', // if latestObs exists, use °C; else N/A
+            wind: latestObs?.windMs != null ? `${latestObs.windMs.toFixed(1)} m/s` : 'N/A', // if latestObs exists, use m/s; else N/A
+            gusts: latestObs?.gustMs != null ? `${latestObs.gustMs.toFixed(1)} m/s` : 'N/A', // if latestObs exists, use m/s; else N/A
             roadConditions: parsed.roadConditions || 'N/A',
-            officialAlert: parsed.officialAlert,
             latestObs: latestObs,
             stationAlerts: alerts?.[station.id] || []
         });
@@ -84,7 +83,7 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
         headerCell.appendChild(labelSpan);
         
         // Add data type badge to Station header cell
-        if (index === 0) {
+        if (index === 0) { // only in Station column
             const dataBadge = document.createElement('span');
             dataBadge.className = isForecast ? 'data-badge forecast' : 'data-badge current';
             dataBadge.textContent = isForecast ? 'Future Forecast' : 'Current Observations';
@@ -118,14 +117,6 @@ function displayAdvice(adviceArray, stations, observationsByStation, forecastTim
             warningBadge.className = hasCap ? 'data-badge warning' : 'data-badge caution';
             warningBadge.textContent = hasCap ? 'WARNING' : 'CAUTION';
             stationCell.appendChild(warningBadge);
-        }
-
-        // official alert badge, if present
-        if (data.officialAlert) {
-            const alertBadge = document.createElement('span');
-            alertBadge.className = 'advice-official-alert';
-            alertBadge.textContent = '⚠️ ' + data.officialAlert;
-            stationCell.appendChild(alertBadge);
         }
 
         tableRow.appendChild(stationCell);
