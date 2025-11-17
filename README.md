@@ -5,4 +5,3 @@ Currently fixed on one route, Reykjavík ↔ Ísafjörður (due to limitations -
 ## screenshots of application:
 ![roadsAI-h1.png](src/main/resources/static/images/screenshots/roadsAI-h1.png)
 ![roadsAI-h2.png](src/main/resources/static/images/screenshots/roadsAI-h2.png)
-gi
