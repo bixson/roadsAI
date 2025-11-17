@@ -8,42 +8,23 @@ function displayHazards(hazards) {
     
     const heading = document.createElement('div');
     heading.className = 'hazards-message-heading';
-    
-    // Determine heading text
-    let primaryText = 'Official Weather Warnings';
-    let secondaryText = '(ICELANDIC METEOROLOGICAL OFFICE)';
-    
-    if (hazards && hazards.length > 0) {
-        const headingText = hazards[0];
-        const parenIndex = headingText.indexOf('(');
-        if (parenIndex !== -1) {
-            primaryText = headingText.substring(0, parenIndex).trim();
-            secondaryText = headingText.substring(parenIndex).trim();
-        } else {
-            primaryText = headingText;
-            secondaryText = '';
-        }
-    }
-    
-    // Create heading HTML
     heading.innerHTML = `
         <div class="heading-line">
             <span class="warning-icon">⚠️</span>
-            <span class="heading-line-primary">${primaryText}</span>
+            <span class="heading-line-primary">Official Weather Warnings</span>
             <span class="warning-icon">⚠️</span>
         </div>
-        ${secondaryText ? `<div class="heading-line-secondary">${secondaryText}</div>` : ''}
+        <div class="heading-line-secondary">(ICELANDIC METEOROLOGICAL OFFICE)</div>
     `;
-    
     message.appendChild(heading);
     
     // Add content
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'hazards-message-content';
     
-    if (hazards && hazards.length > 1) {
+    if (hazards && hazards.length > 0) {
         hazardsContent.classList.add('has-warnings');
-        contentWrapper.innerHTML = hazards.slice(1).join('<br><br>');
+        contentWrapper.innerHTML = hazards.join('<br><br>');
     } else {
         contentWrapper.textContent = 'No hazards detected for given route - conditions are within safe limits';
     }

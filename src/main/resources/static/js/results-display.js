@@ -1,32 +1,22 @@
 function displayResults(data, forecastTime) {
     // Convert alerts Map to array format for hazards display
-    const alertsArray = [];
-    if (data.alerts && Object.keys(data.alerts).length > 0) {
-        alertsArray.push('Official Weather Warnings (ICELANDIC METEOROLOGICAL OFFICE)');
-        Object.entries(data.alerts).forEach(([stationId, alerts]) => {
-            alerts.forEach(alert => {
-                let alertText = '';
-                if (alert.headline) alertText += alert.headline;
-                if (alert.severity) alertText += ` [${alert.severity}]`;
-                if (alert.eventType) alertText += ` (${alert.eventType})`;
-                if (alert.description) alertText += `: ${alert.description}`;
-                if (alertText) alertsArray.push(alertText);
-            });
-        });
-    }
+    const alertsArray = Object.values(data.alerts || {})
+        .flatMap(alerts => alerts.map(alert => {
+            // Build alert text from available fields
+            const parts = [];
+            if (alert.headline) parts.push(alert.headline);
+            if (alert.severity) parts.push(`[${alert.severity}]`);
+            if (alert.eventType) parts.push(`(${alert.eventType})`);
+            if (alert.description) parts.push(`: ${alert.description}`);
+            return parts.join(' ');
+        }))
+        .filter(text => text);
     displayHazards(alertsArray);
     
-    // Create summary object from stations
-    const summaryStats = {
-        stationsUsed: data.stations ? data.stations.length : 0
-    };
-    displaySummary(summaryStats);
+    displaySummary({ stationsUsed: data.stations?.length ?? 0 });
     
-    // Create mapData object from route and stations
     const mapData = {
-        route: {
-            coordinates: data.route || []
-        },
+        route: { coordinates: data.route ?? [] },
         stations: (data.stations || []).map(station => ({
             id: station.id,
             name: station.name,
@@ -47,22 +37,16 @@ function displayResults(data, forecastTime) {
     }
     
     // Group observations by stationId for easy lookup
-    const observationsByStation = {};
-    if (data.observations && Array.isArray(data.observations)) {
-        data.observations.forEach(obs => {
-            if (!observationsByStation[obs.stationId]) {
-                observationsByStation[obs.stationId] = [];
-            }
-            observationsByStation[obs.stationId].push(obs);
-        });
-    }
+    const observationsByStation = (data.observations || []).reduce((acc, obs) => { // acc= object building, obs= current obs
+        if (!acc[obs.stationId]) acc[obs.stationId] = [];
+        acc[obs.stationId].push(obs);
+        return acc;
+    }, {});
     
     // Display advice with observation data and forecastTime for badge
-    if (data.advice && data.advice.length > 0) {
+    if (data.advice?.length > 0) {
         displayAdvice(data.advice, data.stations || [], observationsByStation, forecastTime, data.alerts);
     }
     
-    // Show results section
-    const results = document.getElementById('results');
-    results.classList.remove('hidden');
+    document.getElementById('results').classList.remove('hidden');
 }
