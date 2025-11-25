@@ -29,7 +29,8 @@ public class StationService {
         // Merge stations from both providers
         var allStations = Stream.concat(vegagerdin.listStations().stream(), vedur.listStations().stream())
                 .toList();
-        
+
+        /// TODO: check k logic for W-E and not only N-S! right now we handle only S-N
         // Sort by latitude (south to north) - base order: RVK → IFJ
         List<Station> sorted = allStations.stream()
                 .sorted((s1, s2) -> Double.compare(s1.latitude(), s2.latitude()))
