@@ -2,6 +2,8 @@ package dk.ek.roadsai.service.ai;
 
 import dk.ek.roadsai.dto.openai.OpenAiRequest;
 import dk.ek.roadsai.dto.openai.OpenAiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,9 +21,10 @@ import java.util.Map;
 // sends prompts to OpenAI and parses response into advice points
 @Service
 public class ObservationAiService {
+    private static final Logger log = LoggerFactory.getLogger(ObservationAiService.class);
     private final WebClient webClient;
 
-    @Value("${openai.api.key}")
+    @Value("${openai.api.key:}")
     private String apiKey;
 
     @Value("${openai.api.model:gpt-4o-mini}")
@@ -36,10 +39,26 @@ public class ObservationAiService {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
+    
+    /**
+     * Check if OpenAI API is configured.
+     */
+    public boolean isConfigured() {
+        return apiKey != null && !apiKey.isBlank();
+    }
 
     // asks OpenAI for driving advice based on prompts
     // returns list of advice points, or fallback messages on error
     public List<String> ask(String systemPrompt, String userPrompt, int expectedCount) {
+        // Check if API key is configured
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("OpenAI API key not configured! Set OPENAI_API_KEY environment variable.");
+            return generateFallback(expectedCount);
+        }
+        
+        log.info("Calling OpenAI API with model: {}, key starts with: {}...", 
+                model, apiKey.substring(0, Math.min(8, apiKey.length())));
+        
         try {
             OpenAiRequest request = new OpenAiRequest();
             request.model = model;
@@ -58,17 +77,21 @@ public class ObservationAiService {
                     .block();
 
             if (response == null || response.choices == null || response.choices.isEmpty()) {
+                log.warn("OpenAI returned empty response");
                 return generateFallback(expectedCount);
             }
 
             String content = response.choices.getFirst().message.content;
             if (content == null || content.isBlank()) {
+                log.warn("OpenAI returned empty content");
                 return generateFallback(expectedCount);
             }
-
+            
+            log.info("OpenAI response received successfully ({} chars)", content.length());
             return parseAdvicePoints(content, expectedCount);
 
         } catch (Exception e) {
+            log.error("OpenAI API call failed: {} - {}", e.getClass().getSimpleName(), e.getMessage());
             return generateFallback(expectedCount);
         }
     }

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roads Advisor V2 - Interactive Iceland Road Map</title>
+    <link rel="stylesheet" href="style.css?v=11">
+</head>
+<body>
+    <!-- Full-page Google Maps container -->
+    <div id="map"></div>
+    
+    <!-- Floating UI Elements -->
+    <div class="ui-overlay">
+        <!-- Search/Route Form Panel (Top Left) -->
+        <div id="searchPanel" class="panel search-panel">
+            <div class="panel-header">
+                <div class="logo-row">
+                    <span class="logo">🛣️ Roads Advisor</span>
+                </div>
+            </div>
+            
+            <form id="routeForm" class="route-form">
+                <div class="form-field">
+                    <label for="origin">From</label>
+                    <div class="custom-dropdown">
+                        <input type="text" id="origin" name="origin" 
+                               placeholder="Start location..."
+                               autocomplete="off" required>
+                        <div class="dropdown-menu" id="originDropdown"></div>
+                    </div>
+                </div>
+                
+                <div class="form-field">
+                    <label for="destination">To</label>
+                    <div class="custom-dropdown">
+                        <input type="text" id="destination" name="destination"
+                               placeholder="Destination..."
+                               autocomplete="off" required>
+                        <div class="dropdown-menu" id="destinationDropdown"></div>
+                    </div>
+                </div>
+                
+                <div class="form-field datetime-field">
+                    <label>Departure (optional)</label>
+                    <div class="datetime-row">
+                        <input type="date" id="date" name="date">
+                        <input type="time" id="time" name="time">
+                    </div>
+                </div>
+                
+                <button type="submit" id="submitBtn" class="btn-primary" disabled>
+                    <span class="btn-text">Get Route Advice</span>
+                </button>
+            </form>
+            
+        </div>
+        
+        <!-- Weather Info Panel (Right Side - slides in) -->
+        <div id="weatherPanel" class="panel weather-panel hidden">
+            <div class="panel-header">
+                <h2>Route Weather</h2>
+                <button id="toggleWeatherPanel" class="btn-toggle">▼</button>
+            </div>
+            <div id="weatherContent" class="panel-content">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Route Summary Bar (Bottom) -->
+        <div id="routeSummary" class="route-summary">
+            <div class="summary-content">
+                <div class="summary-item">
+                    <span class="summary-icon">📍</span>
+                    <span class="summary-value" id="routeDistance">--</span>
+                    <span class="summary-label">km</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-item">
+                    <span class="summary-icon">⏱️</span>
+                    <span class="summary-value" id="routeDuration">--</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-item">
+                    <span class="summary-icon">📡</span>
+                    <span class="summary-value" id="stationCount">--</span>
+                    <span class="summary-label">stations</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-item status-indicator" id="weatherStatus">
+                    <span class="status-dot green"></span>
+                    <span class="summary-value">All Clear</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Advice Panel (Bottom Right - expandable) -->
+        <div id="advicePanel" class="panel advice-panel hidden">
+            <div class="panel-header">
+                <h2>🤖 AI Driving Advice</h2>
+                <button id="toggleAdvice" class="btn-toggle">▼</button>
+            </div>
+            <div id="adviceContent" class="panel-content">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loadingText">Calculating route...</p>
+        </div>
+    </div>
+    
+    <!-- Error Toast -->
+    <div id="errorToast" class="error-toast hidden">
+        <span id="errorMessage"></span>
+        <button id="closeError" class="btn-close-small">×</button>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="app.js?v=11"></script>
+</body>
+</html>

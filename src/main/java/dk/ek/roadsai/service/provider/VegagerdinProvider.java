@@ -12,7 +12,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 /// Vegagerðin road weather station data provider
@@ -33,18 +32,36 @@ public class VegagerdinProvider implements StationProvider {
     // Vegagerdin JSON timestamps ("4.11.2025 21:50:00")
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("d.M.yyyy HH:mm:ss");
     private static final ZoneId Z_REYK = ZoneId.of("Atlantic/Reykjavik");
-    //fixed for RVK↔IFJ
-    private final List<Station> registry = List.of(
-            new Station("veg:31674", "HFNFJ (Hafnarfjall)", 64.4755, -21.9603, "VEGAGERDIN"),
-            new Station("veg:31985", "BRATT (Brattabrekka)", 64.8716, -21.5155, "VEGAGERDIN"),
-            new Station("veg:32377", "THROS (Þröskuldar)", 65.5524, -21.833, "VEGAGERDIN"),
-            new Station("veg:32474", "STEHE (Steingrímsfjarðarheiði)", 65.7503, -22.1291, "VEGAGERDIN"),
-            new Station("veg:32654", "OGURI (Ögur)", 66.0449, -22.6817, "VEGAGERDIN")
-    );
 
+    /** Ensures the bulk JSON cache is fresh, fetching from the API if stale. */
+    private void ensureFresh() {
+        if (lastJson == null || Duration.between(lastFetchAt, Instant.now()).compareTo(TTL) >= 0) {
+            try {
+                lastJson = http.get().uri("/api/vedur2014_1")
+                        .retrieve().bodyToMono(String.class).block();
+                lastFetchAt = Instant.now();
+            } catch (Exception e) { /* keep stale on error */ }
+        }
+    }
+
+    /** Returns all Iceland road weather stations discovered dynamically from the bulk API. */
     @Override
     public List<Station> listStations() {
-        return registry;
+        ensureFresh();
+        if (lastJson == null || lastJson.isBlank()) return List.of();
+        try {
+            List<VegagerdinItemDto> all = json.readValue(lastJson, new TypeReference<List<VegagerdinItemDto>>() {});
+            Map<Integer, Station> seen = new LinkedHashMap<>();
+            for (VegagerdinItemDto v : all) {
+                if (v == null || v.nrVedurstofa == null || v.breidd == null || v.lengd == null) continue;
+                seen.computeIfAbsent(v.nrVedurstofa, nr ->
+                        new Station("veg:" + nr, v.nafn != null ? v.nafn : "veg:" + nr,
+                                v.breidd, v.lengd, "VEGAGERDIN"));
+            }
+            return List.copyOf(seen.values());
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     @Override
@@ -58,21 +75,12 @@ public class VegagerdinProvider implements StationProvider {
             return List.of(); // Invalid station ID format
         }
 
-        // 1) Fetch JSON array (bulk) (cache-check)
-        String jsonStr = null;
-        if (lastJson != null && Duration.between(lastFetchAt, Instant.now()).compareTo(TTL) < 0) {
-            jsonStr = lastJson;
-        } else {
-            // Fetch fresh JSON + update cache
-            jsonStr = http.get().uri("/api/vedur2014_1")
-                    .retrieve().bodyToMono(String.class).block();
-            lastJson = jsonStr;
-            lastFetchAt = Instant.now();
-        }
-        
-        if (jsonStr == null || jsonStr.isBlank()) {
+        // 1) Fetch JSON array (bulk) using shared cache
+        ensureFresh();
+        if (lastJson == null || lastJson.isBlank()) {
             return List.of();
         }
+        String jsonStr = lastJson;
 
         // 2) Parse JSON array directly into DTOs
         List<VegagerdinItemDto> vedur;
@@ -88,7 +96,7 @@ public class VegagerdinProvider implements StationProvider {
                 .map(v -> toObs(stationId, v, Z_REYK)) // convert DTO to model
                 .filter(Objects::nonNull) // skip malformed observations
                 .filter(o -> !o.timestamp().isBefore(from) && !o.timestamp().isAfter(to)) // filter by requested time window
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // Converts a VegagerdinItemDto to StationObservation

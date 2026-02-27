@@ -28,11 +28,29 @@ public class VedurAwsProvider implements StationProvider {
     private final Map<String, List<VedurAwsDto.Aws10minBasic>> cacheData = new HashMap<>();
     private final Map<String, Instant> cacheTime = new HashMap<>();
 
-    //fixed for RVK↔IFJ
+    // All-Iceland AWS station registry
     private final List<Station> registry = List.of(
-            new Station("imo:1475", "vedur.is Reykjavík, Faxaflói", 64.1275, -21.902, "IMO"),
-            new Station("imo:2481", "vedur.is Hólmavík", 65.6873, -21.6813, "IMO"),
-            new Station("imo:2642", "vedur.is Ísafjörður", 66.0596, -23.1699, "IMO")
+            new Station("imo:1475", "Reykjavík, Faxaflói", 64.1275, -21.902, "IMO"),
+            new Station("imo:1474", "Keflavík", 63.9765, -22.5899, "IMO"),
+            new Station("imo:1477", "Akranes", 64.3169, -22.0792, "IMO"),
+            new Station("imo:1497", "Selfoss", 63.9325, -20.9975, "IMO"),
+            new Station("imo:1461", "Vík í Mýrdal", 63.4187, -19.0067, "IMO"),
+            new Station("imo:1495", "Vestmannaeyjar", 63.4381, -20.2893, "IMO"),
+            new Station("imo:2481", "Hólmavík", 65.6873, -21.6813, "IMO"),
+            new Station("imo:2540", "Stykkishólmur", 65.0769, -22.7287, "IMO"),
+            new Station("imo:2642", "Ísafjörður", 66.0596, -23.1699, "IMO"),
+            new Station("imo:2643", "Akureyri", 65.6854, -18.0872, "IMO"),
+            new Station("imo:2636", "Blönduós", 65.6584, -20.2881, "IMO"),
+            new Station("imo:2501", "Sauðárkrókur", 65.7458, -19.6381, "IMO"),
+            new Station("imo:2601", "Siglufjörður", 66.1523, -18.9098, "IMO"),
+            new Station("imo:2620", "Hveravellir", 64.8706, -19.5527, "IMO"),
+            new Station("imo:3133", "Egilsstaðir", 65.2667, -14.4036, "IMO"),
+            new Station("imo:3166", "Neskaupstaður", 65.1437, -13.6847, "IMO"),
+            new Station("imo:3009", "Höfn í Hornafirði", 64.2636, -15.2119, "IMO"),
+            new Station("imo:3190", "Dalatangi", 65.2696, -13.5726, "IMO"),
+            new Station("imo:1476", "Hellisheiði", 64.0238, -21.3877, "IMO"),
+            new Station("imo:1492", "Landmannalaugar", 63.9833, -19.0667, "IMO"),
+            new Station("imo:1488", "Kirkjubæjarklaustur", 63.7861, -18.0507, "IMO")
     );
 
     @Override

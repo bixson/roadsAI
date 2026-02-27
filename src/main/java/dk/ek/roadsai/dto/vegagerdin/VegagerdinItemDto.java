@@ -10,11 +10,6 @@ public class VegagerdinItemDto {
     @JsonProperty("Hiti")       public Double hiti;        // °C
     @JsonProperty("Vindhradi")  public Double vindhradi;   // m/s
     @JsonProperty("Vindhvida")  public Double vindhvida;   // m/s (gust)
-    @JsonProperty("Vindatt")    public Integer vindatt;    // wind direction (degrees)
-    @JsonProperty("VindattAscEng") public String vindattAscEng; // N/E/S/W
-    @JsonProperty("Raki")       public Double raki;        // humidity (%)
     @JsonProperty("Nafn")       public String nafn;        // name
-    @JsonProperty("Nr")         public Integer nr;         // internal station number
     @JsonProperty("Nr_Vedurstofa") public Integer nrVedurstofa; // official station number
-    @JsonProperty("Status")     public String status;
 }
