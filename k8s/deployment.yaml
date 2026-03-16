@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roadsai
+  labels:
+    app: roadsai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: roadsai
+  template:
+    metadata:
+      labels:
+        app: roadsai
+    spec:
+      containers:
+        - name: roadsai
+          image: ghcr.io/bixson/roadsai:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+
+        # Idle-killer sidecar: scales the deployment to 0 after 10 min with no inbound traffic.
+        # Watches the app's HTTP port; if no connections are seen for 600s it patches replicas=0.
+        # Requires the pod's ServiceAccount to have patch rights on the Deployment (see RBAC below).
+        - name: idle-killer
+          image: ghcr.io/bixson/roadsai-idle-killer:latest  # build from scripts/idle-killer/ or replace with a generic image
+          env:
+            - name: WATCH_PORT
+              value: "8080"
+            - name: IDLE_TIMEOUT_SECONDS
+              value: "600"
+            - name: DEPLOYMENT_NAME
+              value: "roadsai"
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+---
+# RBAC so the idle-killer sidecar can scale the Deployment down
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: roadsai
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: roadsai-scaler
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale", "deployments"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: roadsai-scaler
+subjects:
+  - kind: ServiceAccount
+    name: roadsai
+roleRef:
+  kind: Role
+  name: roadsai-scaler
+  apiGroup: rbac.authorization.k8s.io

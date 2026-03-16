@@ -1,6 +1,7 @@
 target/
 .git/
 .gitignore
+.github/
 .idea/
 *.iml
 README.md
@@ -9,4 +10,5 @@ HELP.md
 mvnw
 mvnw.cmd
 *.md
-
+k8s/
+docker-compose.yml
